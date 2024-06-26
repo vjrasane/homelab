@@ -15,12 +15,51 @@ services:
     container_name: homepage
     ports:
       - 3000:3000
+    restart: always
     volumes:
       - ./homepage:/app/config
+    env_file: .env
     environment:
       PUID: 1000
       PGID: 1000
 
+  nginx:
+    image: 'jc21/nginx-proxy-manager:latest'
+    restart: unless-stopped
+    ports:
+      - '80:80' # Public HTTP Port
+      - '443:443' # Public HTTPS Port
+      - '81:81' # Admin Web Port
+    env_file: .env
+    environment:
+      DB_MYSQL_HOST: nginx-db 
+      DB_MYSQL_PORT: 3306
+      DB_MYSQL_USER: nginx
+      DB_MYSQL_NAME: nginx
+      # Uncomment this if IPv6 is not enabled on your host
+      # DISABLE_IPV6: 'true'
+    volumes:
+      - nginx-data:/data
+      - ./letsencrypt:/etc/letsencrypt
+    depends_on:
+      - nginx-db
+
+  nginx-db:
+    image: 'jc21/mariadb-aria:latest'
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      MYSQL_DATABASE: nginx
+      MYSQL_USER: nginx
+      MARIADB_AUTO_UPGRADE: '1'
+    volumes:
+      - nginx-db-data:/var/lib/mysql
+    
+
 volumes:
+  nginx-data:
+    driver: local
+  nginx-db-data: 
+    driver: local
   portainer_data:
     driver: local
