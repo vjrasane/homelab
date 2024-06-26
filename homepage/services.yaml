@@ -1,0 +1,14 @@
+---
+# For configuration options and examples, please see:
+# https://gethomepage.dev/latest/configs/services
+
+- Admin:
+    - Portainer:
+        icon: portainer.svg
+        href: https://{{HOMEPAGE_VAR_IP}}:9443
+        description: Container management
+        widget:
+            type: portainer
+            url: https://{{HOMEPAGE_VAR_IP}}:9443
+            env: 2
+            key: {{HOMEPAGE_VAR_PORTAINER_TOKEN}}
