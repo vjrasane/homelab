@@ -25,7 +25,7 @@ services:
 
   nginx:
     image: 'jc21/nginx-proxy-manager:latest'
-    restart: unless-stopped
+    restart: always
     ports:
       - '80:80' # Public HTTP Port
       - '443:443' # Public HTTPS Port
@@ -46,7 +46,7 @@ services:
 
   nginx-db:
     image: 'jc21/mariadb-aria:latest'
-    restart: unless-stopped
+    restart: always
     env_file: .env
     environment:
       MYSQL_DATABASE: nginx
@@ -55,6 +55,38 @@ services:
     volumes:
       - nginx-db-data:/var/lib/mysql
     
+  jellyfin:
+    image: jellyfin/jellyfin
+    container_name: jellyfin
+    volumes:
+      - ./jellyfin:/config
+      - jellyfin-cache:/cache
+      - /home/vjrasane/shared/media:/media
+    restart: always
+    environment:
+      - JELLYFIN_PublishedServerUrl=http://rpi5-01:8096
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    ports:
+      - 8096:8096
+
+  syncthing:
+    image: lscr.io/linuxserver/syncthing:latest
+    container_name: syncthing
+    hostname: syncthing #optional
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Etc/UTC
+    volumes:
+      - syncthing-data:/config
+      - /home/vjrasane/shared:/shared
+    ports:
+      - 8384:8384
+      - 22000:22000/tcp
+      - 22000:22000/udp
+      - 21027:21027/udp
+    restart: always 
 
 volumes:
   nginx-data:
@@ -62,4 +94,8 @@ volumes:
   nginx-db-data: 
     driver: local
   portainer_data:
+    driver: local
+  jellyfin-cache:
+    driver: local
+  syncthing-data:
     driver: local
