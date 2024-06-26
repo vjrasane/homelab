@@ -5,10 +5,45 @@
 - Admin:
     - Portainer:
         icon: portainer.svg
-        href: https://{{HOMEPAGE_VAR_IP}}:9443
+        href: https://{{HOMEPAGE_VAR_HOSTNAME}}:9443
         description: Container management
         widget:
             type: portainer
-            url: https://{{HOMEPAGE_VAR_IP}}:9443
+            url: https://{{HOMEPAGE_VAR_HOSTNAME}}:9443
             env: 2
             key: {{HOMEPAGE_VAR_PORTAINER_TOKEN}}
+    - SyncThing:
+        icon: syncthing.png
+        href: http://{{HOMEPAGE_VAR_HOSTNAME}}:8384
+        description: File sync
+        widget:
+          type: customapi
+          url: http://{{HOMEPAGE_VAR_HOSTNAME}}:8384/rest/svc/report
+          headers:
+            X-API-Key: {{HOMEPAGE_VAR_SYNCTHING_APIKEY}}
+          mappings:
+            - field: totMiB
+              label: Stored (MB)
+              format: number
+            - field: numFolders
+              label: Folders
+              format: number
+            - field: totFiles
+              label: Files
+              format: number
+            - field: numDevices
+              label: Devices
+              format: number
+
+- Media:
+    - Jellyfin:
+        icon: jellyfin.png
+        href: http://{{HOMEPAGE_VAR_HOSTNAME}}:8096
+        description: Media streaming
+        widget:
+            type: jellyfin
+            url: http://{{HOMEPAGE_VAR_HOSTNAME}}:8096
+            key: {{HOMEPAGE_VAR_JELLYFIN_APIKEY}}
+            enableBlocks: true 
+            enableNowPlaying: false
+            expandOneStreamToTwoRows: false # optional, defaults to true
