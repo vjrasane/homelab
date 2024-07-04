@@ -1,0 +1,9 @@
+services:
+  cloudflare-ddns:
+    image: oznu/cloudflare-ddns:latest
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      - PROXIED=false
+      - PUID=1000
+      - GUID=1000

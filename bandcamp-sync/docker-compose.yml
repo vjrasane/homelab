@@ -1,0 +1,13 @@
+services:
+  bandcamp-sync:
+    build: .
+    env_file: .env
+    volumes:
+      - /home/vjrasane/shared/media/music:/var/app/output
+      - playwright-cache:/var/app/playwright
+    environment:
+      - OUTPUT_DIR=/var/app/output
+
+volumes:
+  playwright-cache:
+    driver: local
