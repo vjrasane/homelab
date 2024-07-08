@@ -2,8 +2,9 @@ include:
   - ./nginx/docker-compose.yml
   - ./cloudflare-ddns/docker-compose.yml
   - ./jellyfin/docker-compose.yml
+  - ./immich/docker-compose.yml
+  - ./linkwarden/docker-compose.yml
   - ./homepage/docker-compose.yml
   # - ./portainer/docker-compose.yml
   # - ./bandcamp-sync/docker-compose.yml
-
 

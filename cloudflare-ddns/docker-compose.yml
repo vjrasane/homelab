@@ -7,3 +7,4 @@ services:
       - PROXIED=false
       - PUID=1000
       - GUID=1000
+      
