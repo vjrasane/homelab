@@ -1,0 +1,31 @@
+
+services:
+  briefkasten-db:
+    container_name: brierfkasten-db
+    image: postgres
+    restart: unless-stopped
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=briefkasten
+    expose:
+      - 5432
+    volumes:
+      - briefkasten-db-data:/var/lib/postgresql/data
+  briefkasten:
+    container_name: briefkasten 
+    image: ndom91/briefkasten
+    environment:
+      DATABASE_URL: postgres://postgres:postgres@briefkasten-db:5432/briefkasten?sslmode=disable
+      NEXTAUTH_URL: http://localhost:3000
+    env_file: .env
+      # NEXTAUTH_SECRET
+    restart: unless-stopped
+    expose: 
+      - 3000
+    depends_on:
+      - briefkasten-db
+
+volumes:
+  briefkasten-db-data:
+    driver: local
