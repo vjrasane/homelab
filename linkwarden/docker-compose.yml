@@ -15,7 +15,7 @@ services:
     env_file: .env
     environment:
       DATABASE_URL: postgresql://postgres:postgres@linkwarden-db:5432/linkwarden
-      NEXTAUTH_URL: http://localhost:3000/api/v1/auth
+      NEXT_PUBLIC_DISABLE_REGISTRATION: true
       # NEXTAUTH_SECRET
     restart: unless-stopped
     # build: . # uncomment this line to build from source

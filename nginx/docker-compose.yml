@@ -1,7 +1,7 @@
 services:
   nginx-proxy-manager:
     # image: 'jc21/nginx-proxy-manager:2.9.14'
-    build: 
+    build:
       dockerfile: Dockerfile
       context: .
     restart: unless-stopped
@@ -23,6 +23,7 @@ services:
       # DISABLE_IPV6: 'true'
     volumes:
       - nginx-proxy-manager-data:/data
+      - nginx-proxy-manager-logs:/data/logs
       - letsencrypt-data:/etc/letsencrypt
     depends_on:
       - nginx-proxy-manager-db
@@ -39,10 +40,44 @@ services:
     volumes:
       - nginx-proxy-manager-db-data:/var/lib/mysql
 
+  goaccess:
+    # image: memphisx/rpi-goaccess:latest
+    image: xavierh/goaccess-for-nginxproxymanager:latest
+    container_name: goaccess
+    restart: unless-stopped
+    # command: goaccess /opt/log/fallback_access.log
+    ports:
+      - '7880:7880'
+    environment:
+      - TZ=Europe/Helsinki
+      - SKIP_ARCHIVED_LOGS=False #optional
+      - PGID=1000
+      - PUID=1000
+      - DEBUG=False #optional
+      - EXCLUDE_IPS=127.0.0.1 #optional - comma delimited 
+      - BASIC_AUTH=False
+      - BASIC_AUTH_USERNAME=user
+      - BASIC_AUTH_PASSWORD=pass
+      - LOG_TYPE=NPM #optional - more information below
+    volumes:
+      - nginx-proxy-manager-logs:/opt/log
+      # - ./goaccess.conf:/etc/goaccess/goaccess.conf
+    depends_on:
+      - nginx-proxy-manager
+    # image: gregyankovoy/goaccess        
+    # container_name: goaccess
+    # restart: unless-stopped
+    # ports:
+    #     - 7889:7889
+    # volumes:
+    #     - nginx-proxy-manager-logs:/opt/log
+
 volumes:
   nginx-proxy-manager-data:
     driver: local
   letsencrypt-data:
-    driver: local  
+    driver: local
   nginx-proxy-manager-db-data:
+    driver: local
+  nginx-proxy-manager-logs:
     driver: local
