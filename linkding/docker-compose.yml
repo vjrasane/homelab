@@ -1,0 +1,16 @@
+services:
+  linkding:
+    container_name: linkding
+    image: sissbruecker/linkding:latest
+    expose:
+      - 9090
+    ports:
+      - 9090:9090
+    env_file: .env
+    volumes:
+      - linkding-data:/etc/linkding/data
+    restart: unless-stopped
+
+volumes:
+  linkding-data:
+    driver: local
