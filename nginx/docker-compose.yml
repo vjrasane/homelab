@@ -47,7 +47,7 @@ services:
     restart: unless-stopped
     # command: goaccess /opt/log/fallback_access.log
     ports:
-      - '7880:7880'
+      - 82:7880
     environment:
       - TZ=Europe/Helsinki
       - SKIP_ARCHIVED_LOGS=False #optional
