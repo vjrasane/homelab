@@ -7,9 +7,8 @@ services:
     restart: unless-stopped
     ports:
       # These ports are in format <host-port>:<container-port>
-      - '80:80' # Public HTTP Port
-      - '443:443' # Public HTTPS Port
-      - '81:81' # Admin Web Port
+      - 3003:443
+      - 81:81 # Admin Web Port
       # Add any other Stream port you want to expose
       # - '21:21' # FTP
     environment:
@@ -27,6 +26,8 @@ services:
       - letsencrypt-data:/etc/letsencrypt
     depends_on:
       - nginx-proxy-manager-db
+    networks:
+      - homelab-public
 
   nginx-proxy-manager-db:
     image: 'jc21/mariadb-aria:latest'
@@ -39,6 +40,8 @@ services:
       MARIADB_AUTO_UPGRADE: '1'
     volumes:
       - nginx-proxy-manager-db-data:/var/lib/mysql
+    networks:
+      - homelab-public
 
   goaccess:
     # image: memphisx/rpi-goaccess:latest
@@ -64,6 +67,8 @@ services:
       # - ./goaccess.conf:/etc/goaccess/goaccess.conf
     depends_on:
       - nginx-proxy-manager
+    networks:
+      - homelab-public
     # image: gregyankovoy/goaccess        
     # container_name: goaccess
     # restart: unless-stopped
@@ -71,6 +76,10 @@ services:
     #     - 7889:7889
     # volumes:
     #     - nginx-proxy-manager-logs:/opt/log
+
+networks:
+  homelab-public:
+
 
 volumes:
   nginx-proxy-manager-data:

@@ -1,4 +1,3 @@
-
 services:
   immich-server:
     container_name: immich_server
@@ -25,6 +24,9 @@ services:
       - immich-database
       - immich-machine-learning
     restart: unless-stopped
+    networks:
+      - homelab-public
+      - immich
 
   immich-machine-learning:
     container_name: immich_machine_learning
@@ -38,6 +40,8 @@ services:
       - immich-machine-learning-data:/cache
     # env_file: .env
     restart: unless-stopped
+    networks:
+      - immich
 
   immich-redis:
     container_name: immich_redis
@@ -45,14 +49,16 @@ services:
     healthcheck:
       test: redis-cli ping || exit 1
     restart: always
+    networks:
+      - immich
 
   immich-database:
     container_name: immich_postgres
     image: docker.io/tensorchord/pgvecto-rs:pg14-v0.2.0@sha256:90724186f0a3517cf6914295b5ab410db9ce23190a2d9d0b9dd6463e3fa298f0
     environment:
-      POSTGRES_PASSWORD: postgres 
-      POSTGRES_USER: postgres 
-      POSTGRES_DB: immich 
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_USER: postgres
+      POSTGRES_DB: immich
       POSTGRES_INITDB_ARGS: '--data-checksums'
     volumes:
       - immich-data:/var/lib/postgresql/data
@@ -61,12 +67,32 @@ services:
       interval: 5m
       start_interval: 30s
       start_period: 5m
-    command: ["postgres", "-c" ,"shared_preload_libraries=vectors.so", "-c", 'search_path="$$user", public, vectors', "-c", "logging_collector=on", "-c", "max_wal_size=2GB", "-c", "shared_buffers=512MB", "-c", "wal_compression=on"]
+    command:
+      [
+        "postgres",
+        "-c",
+        "shared_preload_libraries=vectors.so",
+        "-c",
+        'search_path="$$user", public, vectors',
+        "-c",
+        "logging_collector=on",
+        "-c",
+        "max_wal_size=2GB",
+        "-c",
+        "shared_buffers=512MB",
+        "-c",
+        "wal_compression=on"
+      ]
     restart: unless-stopped
+    networks:
+      - immich
+
+networks:
+  immich:
+
 
 volumes:
   immich-data:
-    driver: local 
+    driver: local
   immich-machine-learning-data:
-    driver: local 
-  
+    driver: local
