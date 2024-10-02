@@ -1,0 +1,58 @@
+services:
+  paperless-redis:
+    image: docker.io/library/redis:7
+    restart: unless-stopped
+    volumes:
+      - paperless-redis-data:/data
+    networks:
+      - paperless
+
+  paperless-db:
+    image: docker.io/library/postgres:16
+    restart: unless-stopped
+    volumes:
+      - paperless-db-data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_DB: paperless
+      POSTGRES_USER: paperless
+      POSTGRES_PASSWORD: paperless
+    networks:
+      - paperless
+
+  paperless:
+    image: ghcr.io/paperless-ngx/paperless-ngx:latest
+    restart: unless-stopped
+    depends_on:
+      - paperless-db
+      - paperless-redis
+    expose:
+      - 8000
+    # ports:
+    #   - "8000:8000"
+    volumes:
+      - paperless-data:/usr/src/paperless/data
+      - paperless-media:/usr/src/paperless/media
+      - ../volumes/paperless-export:/usr/src/paperless/export
+      - /home/vjrasane/shared/consume:/usr/src/paperless/consume
+    env_file: .env
+    environment:
+      PAPERLESS_REDIS: redis://paperless-redis:6379
+      PAPERLESS_DBHOST: paperless-db
+    networks:
+      - homelab-public
+      - ofelia
+      - paperless
+
+networks:
+  paperless:
+
+
+volumes:
+  paperless-data:
+    driver: local
+  paperless-media:
+    driver: local
+  paperless-db-data:
+    driver: local
+  paperless-redis-data:
+    driver: local

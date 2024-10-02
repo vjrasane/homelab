@@ -1,0 +1,12 @@
+services:
+  ofelia:
+     image: mcuadros/ofelia:latest
+     volumes: 
+       - /var/run/docker.sock:/var/run/docker.sock
+       - ./ofelia.ini:/etc/ofelia/config.ini
+     restart: unless-stopped
+     networks:
+       - ofelia
+
+networks:
+  ofelia:

@@ -4,6 +4,8 @@ include:
   - ./jellyfin/docker-compose.yml
   - ./immich/docker-compose.yml
   - ./linkding/docker-compose.yml
+  - ./paperless/docker-compose.yml
+  - ./ofelia/docker-compose.yml
   # - ./homepage/docker-compose.yml
   # - ./portainer/docker-compose.yml
   # - ./bandcamp-sync/docker-compose.yml
