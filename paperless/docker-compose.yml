@@ -25,6 +25,7 @@ services:
     depends_on:
       - paperless-db
       - paperless-redis
+      # - paperless-proton-bridge
     expose:
       - 8000
     # ports:
@@ -33,15 +34,27 @@ services:
       - paperless-data:/usr/src/paperless/data
       - paperless-media:/usr/src/paperless/media
       - ../volumes/paperless-export:/usr/src/paperless/export
-      - /home/vjrasane/shared/consume:/usr/src/paperless/consume
+      # - /home/vjrasane/shared/consume:/usr/src/paperless/consume
     env_file: .env
     environment:
       PAPERLESS_REDIS: redis://paperless-redis:6379
       PAPERLESS_DBHOST: paperless-db
+      PAPERLESS_OCR_USER_ARGS: '{"invalidate_digital_signatures": true}'
     networks:
       - homelab-public
       - ofelia
       - paperless
+
+  # paperless-proton-bridge:
+  #   image: vjrasane/protonmail-bridge:build
+  #   restart: unless-stopped
+  #   expose:
+  #     - 25
+  #     - 143
+  #   volumes:
+  #     - ../volumes/paperless-proton-bridge-data:/root
+  #   networks:
+  #     - paperless
 
 networks:
   paperless:
