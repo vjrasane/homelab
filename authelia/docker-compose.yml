@@ -1,0 +1,14 @@
+services:
+  authelia:
+    image: authelia/authelia
+    volumes:
+      - ../volumes/authelia/config:/config
+      - ../volumes/authelia/logs:/logs
+    expose:
+      - 9091
+    # ports:
+    #   - 9091:9091
+    restart: unless-stopped
+    # env_file: .env
+    networks:
+      - homelab-public

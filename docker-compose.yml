@@ -6,6 +6,7 @@ include:
   - ./linkding/docker-compose.yml
   - ./paperless/docker-compose.yml
   - ./ofelia/docker-compose.yml
+  - ./authelia/docker-compose.yml
   # - ./homepage/docker-compose.yml
   # - ./portainer/docker-compose.yml
   # - ./bandcamp-sync/docker-compose.yml
