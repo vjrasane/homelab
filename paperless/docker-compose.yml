@@ -2,8 +2,6 @@ services:
   paperless-redis:
     image: docker.io/library/redis:7
     restart: unless-stopped
-    # volumes:
-    #   - paperless-redis-data:/data
     networks:
       - paperless
 
