@@ -2,13 +2,36 @@ services:
   authelia:
     image: authelia/authelia
     volumes:
+      - ./configuration.yml:/config/configuration.yml
       - ../volumes/authelia/config:/config
       - ../volumes/authelia/logs:/logs
+    user: 1000:1000
     expose:
       - 9091
     # ports:
     #   - 9091:9091
     restart: unless-stopped
-    # env_file: .env
+    depends_on:
+      - lldap
     networks:
+      - authelia
       - homelab-public
+
+  lldap:
+    image: lldap/lldap:stable
+    ports:
+      - 17170:17170
+    expose:
+      - 3890
+    restart: unless-stopped
+    volumes:
+      - ../volumes/lldap:/data
+    env_file: .env
+    environment:
+      UID: 1000
+      GUID: 1000
+    networks:
+      - authelia
+
+networks:
+  authelia:
