@@ -2,8 +2,8 @@ services:
   paperless-redis:
     image: docker.io/library/redis:7
     restart: unless-stopped
-    volumes:
-      - paperless-redis-data:/data
+    # volumes:
+    #   - paperless-redis-data:/data
     networks:
       - paperless
 
@@ -11,7 +11,7 @@ services:
     image: docker.io/library/postgres:16
     restart: unless-stopped
     volumes:
-      - paperless-db-data:/var/lib/postgresql/data
+      - ../volumes/paperless-db:/var/lib/postgresql/data
     environment:
       POSTGRES_DB: paperless
       POSTGRES_USER: paperless
@@ -25,14 +25,13 @@ services:
     depends_on:
       - paperless-db
       - paperless-redis
-      # - paperless-proton-bridge
     expose:
       - 8000
     # ports:
     #   - "8000:8000"
     volumes:
-      - paperless-data:/usr/src/paperless/data
-      - paperless-media:/usr/src/paperless/media
+      - ../volumes/paperless:/usr/src/paperless/data
+      - ../volumes/paperless-media:/usr/src/paperless/media
       - ../volumes/paperless-export:/usr/src/paperless/export
     env_file: .env
     environment:
@@ -48,14 +47,3 @@ services:
 
 networks:
   paperless:
-
-
-volumes:
-  paperless-data:
-    driver: local
-  paperless-media:
-    driver: local
-  paperless-db-data:
-    driver: local
-  paperless-redis-data:
-    driver: local

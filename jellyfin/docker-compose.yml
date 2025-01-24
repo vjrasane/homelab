@@ -21,6 +21,3 @@ services:
     networks:
       - homelab-public
 
-volumes:
-  jellyfin-config:
-    driver: local
