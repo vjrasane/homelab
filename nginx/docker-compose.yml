@@ -21,9 +21,9 @@ services:
       # Uncomment this if IPv6 is not enabled on your host
       # DISABLE_IPV6: 'true'
     volumes:
-      - nginx-proxy-manager-data:/data
-      - nginx-proxy-manager-logs:/data/logs
-      - letsencrypt-data:/etc/letsencrypt
+      - ../volumes/nginx-proxy-manager:/data
+      - ../volumes/nginx-proxy-manager-logs:/data/logs
+      - ../volumes/letsencrypt:/etc/letsencrypt
       - ./snippets:/snippets
     depends_on:
       - nginx-proxy-manager-db
@@ -40,7 +40,7 @@ services:
       MYSQL_PASSWORD: 'npm'
       MARIADB_AUTO_UPGRADE: '1'
     volumes:
-      - nginx-proxy-manager-db-data:/var/lib/mysql
+      - ../volumes/nginx-proxy-manager-db:/var/lib/mysql
     networks:
       - homelab-public
 
@@ -64,7 +64,7 @@ services:
       - BASIC_AUTH_PASSWORD=pass
       - LOG_TYPE=NPM #optional - more information below
     volumes:
-      - nginx-proxy-manager-logs:/opt/log
+      - ../volumes/nginx-proxy-manager-logs:/opt/log
       # - ./goaccess.conf:/etc/goaccess/goaccess.conf
     depends_on:
       - nginx-proxy-manager
@@ -80,14 +80,3 @@ services:
 
 networks:
   homelab-public:
-
-
-volumes:
-  nginx-proxy-manager-data:
-    driver: local
-  letsencrypt-data:
-    driver: local
-  nginx-proxy-manager-db-data:
-    driver: local
-  nginx-proxy-manager-logs:
-    driver: local
