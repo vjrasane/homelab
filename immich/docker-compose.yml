@@ -16,9 +16,9 @@ services:
       DB_HOSTNAME: immich-database
       REDIS_HOSTNAME: immich-redis
     expose:
-      - 3001
+      - 2283
     ports:
-      - 3001:3001
+      - 2283:2283
     depends_on:
       - immich-redis
       - immich-database
