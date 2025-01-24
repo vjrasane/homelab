@@ -4,3 +4,7 @@
 */**/*.env
 homepage/config/logs/
 volumes/
+.gitsecret/keys/random_seed
+!*.secret
+authelia/configuration.yml
+crontab.backup

@@ -12,6 +12,7 @@ function backup {
     restic backup -H "${RESTIC_HOST}" "${path}"
 }
 
+crontab -l > "${parent_dir}/crontab.backup"
 backup "${parent_dir}"
 backup "${shared_dir}"
 backup "${gnupg_dir}"
