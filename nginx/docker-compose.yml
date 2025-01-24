@@ -7,7 +7,7 @@ services:
     restart: unless-stopped
     ports:
       # These ports are in format <host-port>:<container-port>
-      - 3003:443
+      - 443:443
       - 81:81 # Admin Web Port
       # Add any other Stream port you want to expose
       # - '21:21' # FTP
@@ -24,6 +24,7 @@ services:
       - nginx-proxy-manager-data:/data
       - nginx-proxy-manager-logs:/data/logs
       - letsencrypt-data:/etc/letsencrypt
+      - ./snippets:/snippets
     depends_on:
       - nginx-proxy-manager-db
     networks:
