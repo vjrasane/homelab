@@ -10,6 +10,7 @@ services:
     restart: unless-stopped
     volumes:
       - ../volumes/paperless-db:/var/lib/postgresql/data
+    user: 1000:1000
     environment:
       POSTGRES_DB: paperless
       POSTGRES_USER: paperless
