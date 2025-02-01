@@ -6,3 +6,4 @@ include:
   - ./paperless/docker-compose.yml
   - ./ofelia/docker-compose.yml
   - ./authelia/docker-compose.yml
+  - ./tandoor/docker-compose.yml

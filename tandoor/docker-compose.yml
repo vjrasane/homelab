@@ -1,0 +1,31 @@
+
+services:
+  tandoor:
+    image: vabene1111/recipes
+    restart: unless-stopped
+    ports:
+      - 80:8080
+    volumes:
+      - ../volumes/tandoor/staticfiles:/opt/recipes/staticfiles
+      - ../volumes/tandoor/mediafiles:/opt/recipes/mediafiles
+    env_file: .env
+    environment:
+      POSTGRES_HOST: tandoor-db
+    depends_on:
+      - tandoor-db
+    networks:
+      - homelab-public
+      - tandoor
+
+  tandoor-db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    volumes:
+      - ../volumes/tandoor-db:/var/lib/postgresql/data
+    user: 1000:1000
+    env_file: .env
+    networks:
+      - tandoor
+
+networks:
+  tandoor:
