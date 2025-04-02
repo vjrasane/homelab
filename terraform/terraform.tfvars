@@ -1,0 +1,5 @@
+pm_api_url = "http://192.168.1.101:8006/api2/json"
+pm_api_token_id = "terraform@pam!terraform"
+pm_api_token_secret = "2aeb6e5a-0ab1-4528-a036-1aa5a524759f"
+pm_node_name = "demonhost"
+lxc_password = "letmein1€"
