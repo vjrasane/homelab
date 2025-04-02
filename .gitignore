@@ -8,4 +8,8 @@ volumes/
 !*.secret
 authelia/configuration.yml
 crontab.backup
+.terraform
 terraform/terraform.tfvars
+terraform/terraform.tfstate
+terraform/terraform.tfstate.backup
+terraform/lxc_ssh_key.pem
