@@ -3,8 +3,8 @@ services:
   tandoor:
     image: vabene1111/recipes
     restart: unless-stopped
-    ports:
-      - 80:8080
+    expose:
+      - 8080
     volumes:
       - ../volumes/tandoor/staticfiles:/opt/recipes/staticfiles
       - ../volumes/tandoor/mediafiles:/opt/recipes/mediafiles
