@@ -28,21 +28,20 @@ resource "proxmox_lxc" "control_node" {
   target_node  = var.pm_node_name
   vmid         = 2000 + count.index
   ostemplate   = var.lxc_ostemplate
-  cores        = var.lxc_control_node_cores
-  memory       = var.lxc_control_node_memory
-  swap         = 256
+  cores        = 1
+  memory       = 1024
   password     = var.lxc_password
   unprivileged = true
   onboot       = true
-  start        = true
+  start        = false
 
   rootfs {
     storage = var.lxc_storage
-    size    = "${var.lxc_control_node_storage}G"
+    size    = "4G"
   }
 
   features {
-    # nesting = true
+    nesting = true
   }
 
   network {
@@ -52,7 +51,7 @@ resource "proxmox_lxc" "control_node" {
     # ip = dchp
     # ip6    = "manual"
     gw = var.lxc_default_gateway
-    firewall = true
+    # firewall = true
   }
 
   ssh_public_keys = tls_private_key.lxc_ssh_key.public_key_openssh
@@ -64,21 +63,20 @@ resource "proxmox_lxc" "work_node" {
   target_node  = var.pm_node_name
   vmid         = 1000 + count.index
   ostemplate   = var.lxc_ostemplate
-  cores        = var.lxc_work_node_cores
-  memory       = var.lxc_work_node_memory
-  swap         = 512
+  cores        = 2
+  memory       = 2048
   password     = var.lxc_password
   unprivileged = true
   onboot       = true
-  start        = true
+  start        = false
 
   rootfs {
     storage = var.lxc_storage
-    size    = "${var.lxc_work_node_storage}G"
+    size    = "32G"
   }
 
   features {
-    # nesting = true
+    nesting = true
   }
 
   network {
@@ -87,7 +85,7 @@ resource "proxmox_lxc" "work_node" {
     ip     = "${var.lxc_ip_prefix}.${120 + count.index}/32"
     # ip6    = "manual"
     gw = var.lxc_default_gateway
-    firewall = true
+    # firewall = true
   }
 
   ssh_public_keys = tls_private_key.lxc_ssh_key.public_key_openssh
