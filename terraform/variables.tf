@@ -57,7 +57,8 @@ variable "lxc_storage" {
 
 variable "lxc_ostemplate" {
   type    = string
-  default = "local:vztmpl/ubuntu-24.10-standard_24.10-1_amd64.tar.zst"
+  # default = "local:vztmpl/ubuntu-24.10-standard_24.10-1_amd64.tar.zst"
+  default = "local:vztmpl/debian-12-standard_12.7-1_amd64.tar.zst"
 }
 
 variable "lxc_default_gateway" {

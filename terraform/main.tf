@@ -42,7 +42,7 @@ resource "proxmox_lxc" "control_node" {
   }
 
   features {
-    nesting = true
+    # nesting = true
   }
 
   network {
@@ -52,6 +52,7 @@ resource "proxmox_lxc" "control_node" {
     # ip = dchp
     # ip6    = "manual"
     gw = var.lxc_default_gateway
+    firewall = true
   }
 
   ssh_public_keys = tls_private_key.lxc_ssh_key.public_key_openssh
@@ -77,7 +78,7 @@ resource "proxmox_lxc" "work_node" {
   }
 
   features {
-    nesting = true
+    # nesting = true
   }
 
   network {
@@ -86,15 +87,19 @@ resource "proxmox_lxc" "work_node" {
     ip     = "${var.lxc_ip_prefix}.${120 + count.index}/32"
     # ip6    = "manual"
     gw = var.lxc_default_gateway
+    firewall = true
   }
 
   ssh_public_keys = tls_private_key.lxc_ssh_key.public_key_openssh
 }
-
+resource "ansible_group" "k3s_cluster" {
+  name     = "k3s_cluster"
+  children = ["server", "agent"]
+}
 resource "ansible_host" "control_node" {
   count  = length(proxmox_lxc.control_node)
   name   = proxmox_lxc.control_node[count.index].hostname
-  groups = ["control_node"]
+  groups = ["server"]
   variables = {
     ansible_host                 = trimsuffix(proxmox_lxc.control_node[count.index].network[0].ip, "/32")
     ansible_user                 = "root"
@@ -105,7 +110,7 @@ resource "ansible_host" "control_node" {
 resource "ansible_host" "work_node" {
   count  = length(proxmox_lxc.work_node)
   name   = proxmox_lxc.work_node[count.index].hostname
-  groups = ["work_node"]
+  groups = ["agent"]
   variables = {
     ansible_host                 = trimsuffix(proxmox_lxc.work_node[count.index].network[0].ip, "/32")
     ansible_user                 = "root"
