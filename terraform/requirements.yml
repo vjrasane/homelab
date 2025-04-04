@@ -2,3 +2,6 @@
 collections:
 # With just the collection name
 - cloud.terraform
+- name: https://github.com/k3s-io/k3s-ansible.git
+  type: git
+  version: master
