@@ -2,6 +2,8 @@
 *.env
 */**/.env
 */**/*.env
+.vscode/
+.ansible/
 homepage/config/logs/
 volumes/
 .gitsecret/keys/random_seed

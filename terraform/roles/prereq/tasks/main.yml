@@ -67,3 +67,9 @@
     path: /etc/sudoers
     validate: visudo -cf %s
   when: ansible_os_family in [ "RedHat", "Suse" ]
+
+- name: Install packages
+  ansible.builtin.package:
+    name: curl
+    state: present
+    update_cache: true

@@ -24,14 +24,14 @@ resource "tls_private_key" "lxc_ssh_key" {
 
 resource "proxmox_lxc" "control_node" {
   count        = 1
-  hostname     = "LXC-control-node-${count.index + 1}"
+  hostname     = "lxc-control-node-${count.index + 1}"
   target_node  = var.pm_node_name
   vmid         = 2000 + count.index
   ostemplate   = var.lxc_ostemplate
   cores        = 1
   memory       = 1024
   password     = var.lxc_password
-  unprivileged = true
+  unprivileged = false
   onboot       = true
   start        = false
 
@@ -41,7 +41,7 @@ resource "proxmox_lxc" "control_node" {
   }
 
   features {
-    nesting = true
+    # nesting = true
   }
 
   network {
@@ -59,14 +59,14 @@ resource "proxmox_lxc" "control_node" {
 
 resource "proxmox_lxc" "work_node" {
   count        = 2
-  hostname     = "LXC-work-node-${count.index + 1}"
+  hostname     = "lxc-work-node-${count.index + 1}"
   target_node  = var.pm_node_name
   vmid         = 1000 + count.index
   ostemplate   = var.lxc_ostemplate
   cores        = 2
   memory       = 2048
   password     = var.lxc_password
-  unprivileged = true
+  unprivileged = false
   onboot       = true
   start        = false
 
@@ -76,13 +76,13 @@ resource "proxmox_lxc" "work_node" {
   }
 
   features {
-    nesting = true
+    # nesting = true
   }
 
   network {
     name   = "eth0"
     bridge = "vmbr0"
-    ip     = "${var.lxc_ip_prefix}.${120 + count.index}/32"
+    ip     = "${var.lxc_ip_prefix}.${110 + count.index + length(proxmox_lxc.control_node)}/32"
     # ip6    = "manual"
     gw = var.lxc_default_gateway
     # firewall = true
@@ -102,6 +102,7 @@ resource "ansible_host" "control_node" {
     ansible_host                 = trimsuffix(proxmox_lxc.control_node[count.index].network[0].ip, "/32")
     ansible_user                 = "root"
     ansible_ssh_private_key_file = local_file.lxc_ssh_key.filename
+    vmid = proxmox_lxc.control_node[count.index].vmid
   }
 }
 
@@ -113,6 +114,17 @@ resource "ansible_host" "work_node" {
     ansible_host                 = trimsuffix(proxmox_lxc.work_node[count.index].network[0].ip, "/32")
     ansible_user                 = "root"
     ansible_ssh_private_key_file = local_file.lxc_ssh_key.filename
+    vmid = proxmox_lxc.work_node[count.index].vmid
+  }
+}
+
+resource "ansible_host" "proxmox_host" {
+  name   = "proxmox_host"
+  groups = ["proxmox"]
+  variables = {
+    ansible_host     = var.pm_host
+    ansible_user     = var.pm_user
+    ansible_ssh_pass = var.pm_password
   }
 }
 
