@@ -17,3 +17,4 @@ terraform/terraform.tfstate.backup
 terraform/lxc_ssh_key.pem
 *.tfstate
 *.tfstate.backup
+terraform/terraform_vars.yml

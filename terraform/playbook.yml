@@ -1,27 +1,65 @@
 ---
+
 - name: Pre tasks
-  hosts: all
+  hosts: localhost
+  connection: local
   pre_tasks:
-    - name: Verify Ansible is version 2.11 or above. (If this fails you may need to update Ansible)
+    - name: Verify Ansible is version 2.17 or above. (If this fails you may need to update Ansible)
       ansible.builtin.assert:
-        that: ansible_version.full is version_compare('2.11', '>=')
+        that: ansible_version.full is version_compare('2.17', '>=')
         msg: >
           "Ansible is out of date. See here for more info: https://docs.technotim.live/posts/ansible-automation/"
 
-- name: Gather facts from 'all' hosts in inventory
-  hosts: all
-  vars:
-    ansible_host_key_checking: false
-    ansible_ssh_extra_args: '-o UserKnownHostsFile=/dev/null'
+- name: Install localhost requirements
+  hosts: localhost
+  connection: local
   tasks:
-    - name: Get network info
-      ansible.builtin.setup:
-        gather_subset: network
+    - name: Install packages
+      become: true
+      ansible.builtin.package:
+        name: dnsutils
+        state: present
+        update_cache: true
+    - name: Install python dependencies
+      ansible.builtin.pip:
+        name:
+          - dnspython
+          - proxmoxer
+
+- name: Stop LXC containers
+  hosts: localhost
+  connection: local
+  vars:
+    lxc_container_vmids: "{{ groups['k3s_cluster'] | map('extract', hostvars) | map(attribute='vmid') }}"
+    lxc_container_hostnames: "{{ groups['k3s_cluster'] | map('extract', hostvars) | map(attribute='ansible_host') }}"
+  vars_files:
+    - ./terraform_vars.yml
+  tasks:
+    - name: Stop LXC containers
+      community.general.proxmox:
+        vmid: '{{ item }}'
+        api_host: '{{ pm_host }}'
+        api_user: '{{ pm_api_user }}'
+        api_token_id: '{{ pm_api_token_name }}'
+        api_token_secret: '{{ pm_api_token_secret }}'
+        state: stopped
+      with_items: '{{ lxc_container_vmids }}'
+
+- name: Wait for LXC containers to stop
+  hosts: k3s_cluster
+  connection: local
+  tasks:
+    - name: Wait for SSH to be unavailable
+      ansible.builtin.wait_for:
+        timeout: 15
+        port: 22
+        host: '{{ ansible_host }}'
+        state: drained
 
 - name: Prepare Proxmox host
   hosts: proxmox_host
   vars:
-    lxc_containers: "{{ groups['k3s_cluster'] | map('extract', hostvars) | map(attribute='vmid') }}"
+    lxc_container_vmids: "{{ groups['k3s_cluster'] | map('extract', hostvars) | map(attribute='vmid') }}"
   tasks:
     - name: Configure LXC containers
       ansible.builtin.blockinfile:
@@ -32,7 +70,83 @@
           lxc.cgroup.devices.allow: a
           lxc.cap.drop:
           lxc.mount.auto: "proc:rw sys:rw"
-      with_items: '{{ lxc_containers }}'
+      with_items: '{{ lxc_container_vmids }}'
+
+- name: Start LXC containers
+  hosts: localhost
+  connection: local
+  vars:
+    lxc_container_vmids: "{{ groups['k3s_cluster'] | map('extract', hostvars) | map(attribute='vmid') }}"
+    lxc_container_hostnames: "{{ groups['k3s_cluster'] | map('extract', hostvars) | map(attribute='ansible_host') }}"
+  vars_files:
+    - ./terraform_vars.yml
+  tasks:
+    - name: Start LXC containers
+      community.general.proxmox:
+        vmid: '{{ item }}'
+        api_host: '{{ pm_host }}'
+        api_user: '{{ pm_api_user }}'
+        api_token_id: '{{ pm_api_token_name }}'
+        api_token_secret: '{{ pm_api_token_secret }}'
+        state: started
+      with_items: '{{ lxc_container_vmids }}'
+
+- name: Wait for LXC containers to start
+  hosts: k3s_cluster
+  connection: local
+  tasks:
+    - name: Wait for SSH to be available
+      ansible.builtin.wait_for:
+        timeout: 15
+        port: 22
+        host: '{{ ansible_host }}'
+        search_regex: 'OpenSSH'
+
+- name: Publish Proxmox Kernel Boot Config
+  hosts: proxmox
+  vars:
+    lxc_container_vmids: "{{ groups['k3s_cluster'] | map('extract', hostvars) | map(attribute='vmid') }}"
+  tasks:
+    - name: Publish Proxmox Kernel Boot Config to LXC
+      ansible.builtin.command: "pct push {{ item }} /boot/config-{{ ansible_kernel }} /boot/config-{{ ansible_kernel }}"
+      changed_when: false
+      with_items: '{{ lxc_container_vmids }}'
+
+- name: Configure LXC containers
+  hosts: k3s_cluster
+  connection: ssh
+  tasks:
+    - name: Symlink /dev/kvmsg
+      ansible.builtin.copy:
+        dest: /usr/local/bin/conf-kmsg.sh
+        mode: '0755'
+        content: |
+          #!/bin/sh -e
+          if [ ! -e /dev/kmsg ]; then
+            ln -s /dev/console /dev/kmsg
+          fi
+          mount --make-rshared /
+    - name: Create service conf
+      ansible.builtin.copy:
+        dest: /etc/systemd/system/conf-kmsg.service
+        mode: '0755'
+        content: |
+          [Unit]
+          Description=Make sure /dev/kmsg exists
+
+          [Service]
+          Type=simple
+          RemainAfterExit=yes
+          ExecStart=/usr/local/bin/conf-kmsg.sh
+          TimeoutStartSec=0
+
+          [Install]
+          WantedBy=default.target
+    - name: Enable conf-kmsg service
+      ansible.builtin.service:
+        name: conf-kmsg
+        enabled: true
+        state: started
 
 - name: Add public keys to known_hosts file
   hosts: localhost
@@ -41,15 +155,6 @@
     ssh_known_hosts_file: "{{ lookup('env','HOME') + '/.ssh/known_hosts' }}"
     ssh_known_hosts: "{{ groups['all'] | map('extract', hostvars) | map(attribute='ansible_host') }}"
   tasks:
-    - name: Install packages
-      become: true
-      ansible.builtin.package:
-        name: dnsutils
-        state: present
-        update_cache: true
-    - name: Install dnspython python package
-      ansible.builtin.pip:
-        name: dnspython
     - name: Add to known_hosts
       ansible.builtin.known_hosts:
         path: '{{ ssh_known_hosts_file }}'
@@ -57,9 +162,19 @@
         key: "{{ lookup('pipe', 'ssh-keyscan -T 10 ' + item + ',' + lookup('dig', item)) }}"
         state: present
       with_items: '{{ ssh_known_hosts }}'
+      retries: 5
+      delay: 5
       become: true
 
-
+# - name: Gather facts from 'all' hosts in inventory
+#   hosts: all
+#   vars:
+#     ansible_host_key_checking: false
+#     ansible_ssh_extra_args: '-o UserKnownHostsFile=/dev/null'
+#   tasks:
+#     - name: Get network info
+#       ansible.builtin.setup:
+#         gather_subset: network
 # - name: Prepare k3s nodes
 #   hosts: k3s_cluster
 #   gather_facts: true

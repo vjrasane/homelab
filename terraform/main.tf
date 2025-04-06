@@ -11,8 +11,8 @@ terraform {
 }
 
 provider "proxmox" {
-  pm_api_url          = var.pm_api_url
-  pm_api_token_id     = var.pm_api_token_id
+  pm_api_url          = "http://${var.pm_host}:8006/api2/json"
+  pm_api_token_id     = "${var.pm_api_user}!${var.pm_api_token_name}"
   pm_api_token_secret = var.pm_api_token_secret
   pm_tls_insecure     = true
 }
@@ -20,6 +20,11 @@ provider "proxmox" {
 resource "tls_private_key" "lxc_ssh_key" {
   algorithm = "RSA"
   rsa_bits  = 4096
+}
+
+resource "random_password" "lxc_password" {
+  length  = 16
+  special = true
 }
 
 resource "proxmox_lxc" "control_node" {
@@ -30,7 +35,7 @@ resource "proxmox_lxc" "control_node" {
   ostemplate   = var.lxc_ostemplate
   cores        = 1
   memory       = 1024
-  password     = var.lxc_password
+  password     = random_password.lxc_password.result
   unprivileged = false
   onboot       = true
   start        = false
@@ -47,7 +52,7 @@ resource "proxmox_lxc" "control_node" {
   network {
     name   = "eth0"
     bridge = "vmbr0"
-    ip     = "${var.lxc_ip_prefix}.${110 + count.index}/32"
+    ip     = "${var.lxc_ip_prefix}.${190 + count.index}/32"
     # ip = dchp
     # ip6    = "manual"
     gw = var.lxc_default_gateway
@@ -65,7 +70,7 @@ resource "proxmox_lxc" "work_node" {
   ostemplate   = var.lxc_ostemplate
   cores        = 2
   memory       = 2048
-  password     = var.lxc_password
+  password     = random_password.lxc_password.result
   unprivileged = false
   onboot       = true
   start        = false
@@ -82,7 +87,7 @@ resource "proxmox_lxc" "work_node" {
   network {
     name   = "eth0"
     bridge = "vmbr0"
-    ip     = "${var.lxc_ip_prefix}.${110 + count.index + length(proxmox_lxc.control_node)}/32"
+    ip     = "${var.lxc_ip_prefix}.${190 + count.index + length(proxmox_lxc.control_node)}/32"
     # ip6    = "manual"
     gw = var.lxc_default_gateway
     # firewall = true
@@ -102,7 +107,8 @@ resource "ansible_host" "control_node" {
     ansible_host                 = trimsuffix(proxmox_lxc.control_node[count.index].network[0].ip, "/32")
     ansible_user                 = "root"
     ansible_ssh_private_key_file = local_file.lxc_ssh_key.filename
-    vmid = proxmox_lxc.control_node[count.index].vmid
+    ansible_python_interpreter = "/usr/bin/python3"
+    vmid                         = proxmox_lxc.control_node[count.index].vmid
   }
 }
 
@@ -114,7 +120,8 @@ resource "ansible_host" "work_node" {
     ansible_host                 = trimsuffix(proxmox_lxc.work_node[count.index].network[0].ip, "/32")
     ansible_user                 = "root"
     ansible_ssh_private_key_file = local_file.lxc_ssh_key.filename
-    vmid = proxmox_lxc.work_node[count.index].vmid
+    ansible_python_interpreter = "/usr/bin/python3"
+    vmid                         = proxmox_lxc.work_node[count.index].vmid
   }
 }
 
@@ -134,7 +141,22 @@ resource "local_file" "lxc_ssh_key" {
   file_permission = "0600"
 }
 
+resource "local_file" "terraform_vars" {
+  content  = <<EOF
+  pm_host: ${var.pm_host}
+  pm_api_user: ${var.pm_api_user}
+  pm_api_token_name: ${var.pm_api_token_name}
+  pm_api_token_secret: ${var.pm_api_token_secret}
+  EOF
+  filename = "${path.module}/terraform_vars.yml"
+}
+
 output "lxc_ssh_key" {
   value     = tls_private_key.lxc_ssh_key
+  sensitive = true
+}
+
+output "lxc_password" {
+  value     = random_password.lxc_password.result
   sensitive = true
 }
