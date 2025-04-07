@@ -1,0 +1,15 @@
+{
+  "language": "typescript",
+  "app": "npx ts-node main.ts",
+  "projectId": "607530fe-7be3-48a8-913b-d70e29402319",
+  "sendCrashReports": "false",
+  "terraformProviders": [
+    "local",
+    "random",
+    "tls",
+    "ansible/ansible",
+    "telmate/proxmox"
+  ],
+  "terraformModules": [],
+  "context": {}
+}
