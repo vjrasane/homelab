@@ -1,5 +1,14 @@
 #!/bin/bash -e
 
+# Git secret
+
+sh -c "echo 'deb https://gitsecret.jfrog.io/artifactory/git-secret-deb git-secret main' >> /etc/apt/sources.list"
+wget -qO - 'https://gitsecret.jfrog.io/artifactory/api/gpg/key/public' | apt-key add -
+apt-get update && apt-get install -y git-secret
+
+# Testing, that it worked:
+git secret --version
+
 # Terraform
 apt update && apt install -y gnupg software-properties-common
 
@@ -18,11 +27,6 @@ tee /etc/apt/sources.list.d/hashicorp.list
 apt update && apt install -y terraform
 
 terraform -help
-
-# Terraform CDKTF
-npm install --global cdktf-cli@latest
-
-cdktf help
 
 # Kubectl
 apt update && apt-get install -y apt-transport-https ca-certificates curl gnupg 

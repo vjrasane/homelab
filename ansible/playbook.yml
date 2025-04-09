@@ -25,6 +25,7 @@
         name:
           - dnspython
           - proxmoxer
+        break_system_packages: true
 
 - name: Stop LXC containers
   hosts: localhost
@@ -33,7 +34,7 @@
     lxc_container_vmids: "{{ groups['k3s_cluster'] | map('extract', hostvars) | map(attribute='vmid') }}"
     lxc_container_hostnames: "{{ groups['k3s_cluster'] | map('extract', hostvars) | map(attribute='ansible_host') }}"
   vars_files:
-    - ./terraform_vars.yml
+    - ../terraform_vars.yml
   tasks:
     - name: Stop LXC containers
       community.general.proxmox:
@@ -79,7 +80,7 @@
     lxc_container_vmids: "{{ groups['k3s_cluster'] | map('extract', hostvars) | map(attribute='vmid') }}"
     lxc_container_hostnames: "{{ groups['k3s_cluster'] | map('extract', hostvars) | map(attribute='ansible_host') }}"
   vars_files:
-    - ./terraform_vars.yml
+    - ../terraform_vars.yml
   tasks:
     - name: Start LXC containers
       community.general.proxmox:
@@ -112,10 +113,34 @@
       changed_when: false
       with_items: '{{ lxc_container_vmids }}'
 
+- name: Add public keys to known_hosts file
+  hosts: localhost
+  connection: local
+  vars:
+    ssh_known_hosts_file: "{{ lookup('env','HOME') + '/.ssh/known_hosts' }}"
+    ssh_known_hosts: "{{ groups['all'] | map('extract', hostvars) | map(attribute='ansible_host') }}"
+  tasks:
+    - name: Add to known_hosts
+      ansible.builtin.known_hosts:
+        path: '{{ ssh_known_hosts_file }}'
+        name: '{{ item }}'
+        key: "{{ lookup('pipe', 'ssh-keyscan -T 10 ' + item + ',' + lookup('dig', item)) }}"
+        state: present
+      with_items: '{{ ssh_known_hosts }}'
+      retries: 5
+      delay: 5
+      become: true
+
 - name: Configure LXC containers
   hosts: k3s_cluster
   connection: ssh
   tasks:
+    - name: Install packages
+      ansible.builtin.package:
+        name:
+          - curl
+        state: present
+        update_cache: true
     - name: Symlink /dev/kvmsg
       ansible.builtin.copy:
         dest: /usr/local/bin/conf-kmsg.sh
@@ -148,23 +173,13 @@
         enabled: true
         state: started
 
-- name: Add public keys to known_hosts file
-  hosts: localhost
-  connection: local
-  vars:
-    ssh_known_hosts_file: "{{ lookup('env','HOME') + '/.ssh/known_hosts' }}"
-    ssh_known_hosts: "{{ groups['all'] | map('extract', hostvars) | map(attribute='ansible_host') }}"
+- name: Install k3s on servers
+  hosts: server
   tasks:
-    - name: Add to known_hosts
-      ansible.builtin.known_hosts:
-        path: '{{ ssh_known_hosts_file }}'
-        name: '{{ item }}'
-        key: "{{ lookup('pipe', 'ssh-keyscan -T 10 ' + item + ',' + lookup('dig', item)) }}"
-        state: present
-      with_items: '{{ ssh_known_hosts }}'
-      retries: 5
-      delay: 5
-      become: true
+    - name: Install k3s
+      command: "curl -sfL https://get.k3s.io | sh - --disable traefik"
+      tags:
+        - skip_ansible_lint
 
 # - name: Gather facts from 'all' hosts in inventory
 #   hosts: all
