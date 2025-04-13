@@ -11,5 +11,5 @@
         mode: '0755'
     - name: Install k3s
       ansible.builtin.command:
-        cmd: /tmp/get-k3s.sh --disable traefik --token '{{ k3s_token }}'
+        cmd: /tmp/get-k3s.sh --disable traefik
         creates: /etc/rancher/k3s/k3s.yaml

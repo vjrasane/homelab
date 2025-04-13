@@ -1,0 +1,17 @@
+- name: Install localhost requirements
+  hosts: localhost
+  connection: local
+  tasks:
+    - name: Install packages
+      become: true
+      ansible.builtin.package:
+        name: dnsutils
+        state: present
+        update_cache: true
+    - name: Install python dependencies
+      ansible.builtin.pip:
+        name:
+          - dnspython
+          - proxmoxer
+          - netaddr
+        break_system_packages: true

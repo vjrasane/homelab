@@ -6,6 +6,14 @@
         proxmox_lxc_filtered_ids: >-
           {{ proxmox_lxc_filtered_files | map("split", "/") | map("last") | map("split", ".") | map("first") }}
       listen: reboot containers
+    - name: Make sure container is started
+      ansible.builtin.command: pct start {{ item }}
+      loop: "{{ proxmox_lxc_filtered_ids }}"
+      register: lxc_start
+      changed_when: true
+      failed_when: >-
+        lxc_start.rc != 0 and "already running" not in lxc_start.stderr
+      listen: reboot containers
     - name: Reboot container
       ansible.builtin.command: pct reboot {{ item }}
       loop: "{{ proxmox_lxc_filtered_ids }}"

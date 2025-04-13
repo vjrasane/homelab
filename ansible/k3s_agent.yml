@@ -1,8 +1,21 @@
 ---
+- name: Get k3s token
+  hosts: server
+  tasks:
+    - name: Read node-token from master
+      ansible.builtin.slurp:
+        src: /var/lib/rancher/k3s/server/token
+      register: node_token
+
+    - name: Store Master node-token
+      ansible.builtin.set_fact:
+        token: "{{ node_token.content | b64decode | regex_replace('\n', '') }}"
+
 - name: Install k3s on agents
   hosts: agent
   vars:
     server_hostname: "{{ groups['server'] | map('extract', hostvars) | map(attribute='ansible_host') | first }}"
+    server_token: "{{ groups['server'] | map('extract', hostvars) | map(attribute='token') | first }}"
   vars_files:
     - ../terraform/terraform_vars.yml
   tasks:
@@ -13,5 +26,5 @@
         mode: "0755"
     - name: Install k3s
       ansible.builtin.command:
-        cmd: /tmp/get-k3s.sh --disable traefik --token '{{ k3s_token }}' --server 'https://{{ server_hostname }}'
+        cmd: /tmp/get-k3s.sh --disable traefik --token '{{ server_token }}' --server 'https://{{ server_hostname }}:6443'
         creates: /etc/rancher/k3s/k3s.yaml

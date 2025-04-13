@@ -2,7 +2,7 @@
 - name: Check for container files that exist on this host
   ansible.builtin.stat:
     path: /etc/pve/lxc/{{ item }}.conf
-  loop: "{{ proxmox_lxc_ct_ids }}"
+  loop: "{{ proxmox_lxc_container_vmids }}"
   register: stat_results
 
 - name: Filter out files that do not exist
