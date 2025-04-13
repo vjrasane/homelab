@@ -152,6 +152,7 @@ resource "local_file" "terraform_vars" {
   pm_api_user: ${var.pm_api_user}
   pm_api_token_name: ${var.pm_api_token_name}
   pm_api_token_secret: '${var.pm_api_token_secret}'
+  lxc_ssh_key_file: ${local_file.lxc_ssh_key.filename}
   k3s_token: '${random_password.k3s_token.result}'
   EOF
   filename = "${path.module}/../terraform_vars.yml"
