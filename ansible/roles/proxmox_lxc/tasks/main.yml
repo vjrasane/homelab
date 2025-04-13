@@ -1,43 +1,31 @@
----
-- name: Check for container files that exist on this host
-  ansible.builtin.stat:
-    path: /etc/pve/lxc/{{ item }}.conf
-  loop: "{{ proxmox_lxc_container_vmids }}"
-  register: stat_results
-
-- name: Filter out files that do not exist
-  ansible.builtin.set_fact:
-    proxmox_lxc_filtered_files: '{{ stat_results.results | rejectattr("stat.exists", "false") | map(attribute="stat.path") }}' # noqa yaml[line-length]
-
-# https://gist.github.com/triangletodd/02f595cd4c0dc9aac5f7763ca2264185
 - name: Ensure lxc config has the right apparmor profile
   ansible.builtin.lineinfile:
-    dest: "{{ item }}"
+    dest: "/etc/pve/lxc/{{ item }}.conf"
     regexp: ^lxc.apparmor.profile
     line: "lxc.apparmor.profile: unconfined"
-  loop: "{{ proxmox_lxc_filtered_files }}"
+  loop: "{{ proxmox_lxc_container_vmids }}"
   notify: reboot containers
 
 - name: Ensure lxc config has the right cgroup
   ansible.builtin.lineinfile:
-    dest: "{{ item }}"
+    dest: "/etc/pve/lxc/{{ item }}.conf"
     regexp: ^lxc.cgroup.devices.allow
     line: "lxc.cgroup.devices.allow: a"
-  loop: "{{ proxmox_lxc_filtered_files }}"
+  loop: "{{ proxmox_lxc_container_vmids }}"
   notify: reboot containers
 
 - name: Ensure lxc config has the right cap drop
   ansible.builtin.lineinfile:
-    dest: "{{ item }}"
+    dest: "/etc/pve/lxc/{{ item }}.conf"
     regexp: ^lxc.cap.drop
     line: "lxc.cap.drop: "
-  loop: "{{ proxmox_lxc_filtered_files }}"
+  loop: "{{ proxmox_lxc_container_vmids }}"
   notify: reboot containers
 
 - name: Ensure lxc config has the right mounts
   ansible.builtin.lineinfile:
-    dest: "{{ item }}"
+    dest: "/etc/pve/lxc/{{ item }}.conf"
     regexp: ^lxc.mount.auto
     line: 'lxc.mount.auto: "proc:rw sys:rw"'
-  loop: "{{ proxmox_lxc_filtered_files }}"
+  loop: "{{ proxmox_lxc_container_vmids }}"
   notify: reboot containers

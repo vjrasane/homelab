@@ -1,21 +1,30 @@
 ---
-- name: Check for rc.local file
-  ansible.builtin.stat:
-    path: /etc/rc.local
-  register: rcfile
-
-- name: Create rc.local if needed
-  ansible.builtin.lineinfile:
-    path: /etc/rc.local
-    line: "#!/bin/sh -e"
-    create: true
-    insertbefore: BOF
-    mode: u=rwx,g=rx,o=rx
-  when: not rcfile.stat.exists
-
-- name: Write rc.local file
-  ansible.builtin.blockinfile:
-    path: /etc/rc.local
-    content: "{{ lookup('template', 'templates/rc.local.j2') }}"
+- name: Install packages
+  ansible.builtin.package:
+    name:
+      - curl
     state: present
+    update_cache: true
+
+- name: Create conf-kmsg.sh file
+  ansible.builtin.template:
+    src: conf-kmsg.sh.j2
+    dest: /usr/local/bin/conf-kmsg.sh
+    owner: root
+    group: root
+    mode: "0755"
   notify: reboot server
+
+- name: Create service conf
+  ansible.builtin.template:
+    src: conf-kmsg.service.j2
+    dest: /etc/systemd/system/conf-kmsg.service
+    owner: root
+    group: root
+    mode: '0755'
+
+- name: Enable conf-kmsg service
+  ansible.builtin.service:
+    name: conf-kmsg
+    enabled: true
+    state: started

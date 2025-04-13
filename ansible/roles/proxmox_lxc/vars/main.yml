@@ -1,2 +1,3 @@
 ---
 proxmox_lxc_container_vmids: "{{ groups['k3s_cluster'] | map('extract', hostvars) | map(attribute='vmid') }}"
+proxmox_lxc_container_hostnames: "{{ groups['k3s_cluster'] | map('extract', hostvars) | map(attribute='ansible_host') }}"

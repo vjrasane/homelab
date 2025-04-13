@@ -1,0 +1,10 @@
+---
+# tasks file for wait_for_ssh
+- name: Wait for SSH to be available
+  ansible.builtin.wait_for:
+    timeout: 15
+    port: 22
+    host: '{{ item }}'
+    search_regex: 'OpenSSH'
+  loop: '{{ wait_for_ssh_hostnames }}'
+  listen: reboot containers

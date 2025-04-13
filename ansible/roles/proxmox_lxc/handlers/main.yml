@@ -1,14 +1,9 @@
 ---
 - name: Reboot containers
   block:
-    - name: Get container ids from filtered files
-      ansible.builtin.set_fact:
-        proxmox_lxc_filtered_ids: >-
-          {{ proxmox_lxc_filtered_files | map("split", "/") | map("last") | map("split", ".") | map("first") }}
-      listen: reboot containers
     - name: Make sure container is started
       ansible.builtin.command: pct start {{ item }}
-      loop: "{{ proxmox_lxc_filtered_ids }}"
+      loop: "{{ proxmox_lxc_container_vmids }}"
       register: lxc_start
       changed_when: true
       failed_when: >-
@@ -16,6 +11,14 @@
       listen: reboot containers
     - name: Reboot container
       ansible.builtin.command: pct reboot {{ item }}
-      loop: "{{ proxmox_lxc_filtered_ids }}"
+      loop: "{{ proxmox_lxc_container_vmids }}"
       changed_when: true
+      listen: reboot containers
+    - name: Wait for SSH to be available
+      ansible.builtin.wait_for:
+        timeout: 15
+        port: 22
+        host: '{{ item }}'
+        search_regex: 'OpenSSH'
+      loop: '{{ proxmox_lxc_container_hostnames }}'
       listen: reboot containers

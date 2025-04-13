@@ -1,0 +1,10 @@
+# tasks file for known_hosts
+- name: Add to known_hosts
+  ansible.builtin.known_hosts:
+    path: '{{ known_hosts_file }}'
+    name: '{{ item }}'
+    key: "{{ lookup('pipe', 'ssh-keyscan -T 10 ' + item + ',' + lookup('dig', item)) }}"
+    state: present
+  with_items: '{{ known_hosts_names }}'
+  retries: 5
+  delay: 5

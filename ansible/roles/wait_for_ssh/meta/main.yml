@@ -1,0 +1,8 @@
+---
+argument_specs:
+  main:
+    short_description: "Wait for SSH to be available"
+    options:
+      wait_for_ssh_hostnames:
+        description: "List of hostnames"
+        required: true
