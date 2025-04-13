@@ -173,13 +173,13 @@
         enabled: true
         state: started
 
-- name: Install k3s on servers
-  hosts: server
-  tasks:
-    - name: Install k3s
-      command: "curl -sfL https://get.k3s.io | sh - --disable traefik"
-      tags:
-        - skip_ansible_lint
+# - name: Install k3s on servers
+#   hosts: server
+#   tasks:
+#     - name: Install k3s
+#       command: "curl -sfL https://get.k3s.io | sh - --disable traefik"
+#       tags:
+#         - skip_ansible_lint
 
 # - name: Gather facts from 'all' hosts in inventory
 #   hosts: all

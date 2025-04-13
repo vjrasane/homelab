@@ -1,6 +1,8 @@
 ---
 - name: Install k3s on servers
   hosts: server
+  vars_files:
+    - ../terraform/terraform_vars.yml
   tasks:
     - name: Download k3s install script
       ansible.builtin.get_url:
@@ -9,5 +11,5 @@
         mode: '0755'
     - name: Install k3s
       ansible.builtin.command:
-        cmd: /tmp/get-k3s.sh --disable traefik
+        cmd: /tmp/get-k3s.sh --disable traefik --token '{{ k3s_token }}'
         creates: /etc/rancher/k3s/k3s.yaml

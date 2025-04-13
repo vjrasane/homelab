@@ -22,6 +22,11 @@ resource "tls_private_key" "lxc_ssh_key" {
   rsa_bits  = 4096
 }
 
+resource "random_password" "k3s_token" {
+  length = 16
+  special = true
+}
+
 resource "random_password" "lxc_password" {
   length  = 16
   special = true
@@ -146,7 +151,8 @@ resource "local_file" "terraform_vars" {
   pm_host: ${var.pm_host}
   pm_api_user: ${var.pm_api_user}
   pm_api_token_name: ${var.pm_api_token_name}
-  pm_api_token_secret: ${var.pm_api_token_secret}
+  pm_api_token_secret: '${var.pm_api_token_secret}'
+  k3s_token: '${random_password.k3s_token.result}'
   EOF
   filename = "${path.module}/../terraform_vars.yml"
 }
@@ -158,5 +164,10 @@ output "lxc_ssh_key" {
 
 output "lxc_password" {
   value     = random_password.lxc_password.result
+  sensitive = true
+}
+
+output "k3s_token" {
+  value = random_password.k3s_token.result
   sensitive = true
 }

@@ -1,0 +1,17 @@
+---
+- name: Install k3s on agents
+  hosts: agent
+  vars:
+    server_hostname: "{{ groups['server'] | map('extract', hostvars) | map(attribute='ansible_host') | first }}"
+  vars_files:
+    - ../terraform/terraform_vars.yml
+  tasks:
+    - name: Download k3s install script
+      ansible.builtin.get_url:
+        url: https://get.k3s.io
+        dest: /tmp/get-k3s.sh
+        mode: "0755"
+    - name: Install k3s
+      ansible.builtin.command:
+        cmd: /tmp/get-k3s.sh --disable traefik --token '{{ k3s_token }}' --server 'https://{{ server_hostname }}'
+        creates: /etc/rancher/k3s/k3s.yaml
