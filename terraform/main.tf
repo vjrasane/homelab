@@ -22,18 +22,13 @@ resource "tls_private_key" "lxc_ssh_key" {
   rsa_bits  = 4096
 }
 
-resource "random_password" "k3s_token" {
-  length = 16
-  special = true
-}
-
 resource "random_password" "lxc_password" {
   length  = 16
   special = true
 }
 
 resource "proxmox_lxc" "control_node" {
-  count        = 1
+  count        = 3 # minimum for HA
   hostname     = "lxc-control-node-${count.index + 1}"
   target_node  = var.pm_node_name
   vmid         = 2000 + count.index
@@ -43,7 +38,7 @@ resource "proxmox_lxc" "control_node" {
   password     = random_password.lxc_password.result
   unprivileged = false
   onboot       = true
-  start        = false
+  start        = true
 
   rootfs {
     storage = var.lxc_storage
@@ -78,7 +73,7 @@ resource "proxmox_lxc" "work_node" {
   password     = random_password.lxc_password.result
   unprivileged = false
   onboot       = true
-  start        = false
+  start        = true
 
   rootfs {
     storage = var.lxc_storage
@@ -153,7 +148,7 @@ resource "local_file" "terraform_vars" {
   pm_api_token_name: ${var.pm_api_token_name}
   pm_api_token_secret: '${var.pm_api_token_secret}'
   lxc_ssh_key_file: ${local_file.lxc_ssh_key.filename}
-  k3s_token: '${random_password.k3s_token.result}'
+  k3s_vip: ${var.k3s_vip}
   EOF
   filename = "${path.module}/../terraform_vars.yml"
 }
@@ -165,10 +160,5 @@ output "lxc_ssh_key" {
 
 output "lxc_password" {
   value     = random_password.lxc_password.result
-  sensitive = true
-}
-
-output "k3s_token" {
-  value = random_password.k3s_token.result
   sensitive = true
 }

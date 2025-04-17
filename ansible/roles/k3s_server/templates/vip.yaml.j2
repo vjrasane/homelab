@@ -27,17 +27,15 @@ spec:
         - manager
         env:
         - name: vip_arp
-          value: "{{ 'true' if kube_vip_arp | default(true) | bool else 'false' }}"
+          value: "true" 
         - name: bgp_enable
-          value: "{{ 'true' if kube_vip_bgp | default(false) | bool else 'false' }}"
+          value: "false" 
         - name: port
           value: "6443"
-{% if kube_vip_iface %}
         - name: vip_interface
-          value: {{ kube_vip_iface }}
-{% endif %}
+          value: "eth0" 
         - name: vip_cidr
-          value: "{{ apiserver_endpoint | ansible.utils.ipsubnet | ansible.utils.ipaddr('prefix') }}"
+          value: "32" 
         - name: cp_enable
           value: "true"
         - name: cp_namespace
@@ -45,7 +43,7 @@ spec:
         - name: vip_ddns
           value: "false"
         - name: svc_enable
-          value: "{{ 'true' if kube_vip_lb_ip_range is defined else 'false' }}"
+          value: "false" 
         - name: vip_leaderelection
           value: "true"
         - name: vip_leaseduration
@@ -55,31 +53,8 @@ spec:
         - name: vip_retryperiod
           value: "2"
         - name: address
-          value: {{ apiserver_endpoint }}
-{% if kube_vip_bgp | default(false) | bool %}
-{% if kube_vip_bgp_routerid is defined %}
-        - name: bgp_routerid
-          value: "{{ kube_vip_bgp_routerid }}"
-{% endif %}
-{% if _kube_vip_bgp_peers | length > 0 %}
-        - name: bgppeers
-          value: "{{ _kube_vip_bgp_peers | map(attribute='peer_address') | zip(_kube_vip_bgp_peers| map(attribute='peer_asn')) | map('join', ',') | join(':') }}"  # yamllint disable-line rule:line-length
-{% else %}
-{% if kube_vip_bgp_as is defined %}
-        - name: bgp_as
-          value: "{{ kube_vip_bgp_as }}"
-{% endif %}
-{% if kube_vip_bgp_peeraddress is defined %}
-        - name: bgp_peeraddress
-          value: "{{ kube_vip_bgp_peeraddress }}"
-{% endif %}
-{% if kube_vip_bgp_peeras is defined %}
-        - name: bgp_peeras
-          value: "{{ kube_vip_bgp_peeras }}"
-{% endif %}
-{% endif %}
-{% endif %}
-        image: ghcr.io/kube-vip/kube-vip:{{ kube_vip_tag_version }}
+          value: {{ k3s_vip }} 
+        image: ghcr.io/kube-vip/kube-vip:latest
         imagePullPolicy: Always
         name: kube-vip
         resources: {}

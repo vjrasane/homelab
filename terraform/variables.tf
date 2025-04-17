@@ -53,3 +53,7 @@ variable "lxc_ip_prefix" {
   default = "192.168.1"
 }
 
+variable "k3s_vip" {
+  type   = string 
+  default = "192.168.1.102"
+}

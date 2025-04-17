@@ -1,5 +1,4 @@
 ---
-
 - name: Pre tasks
   hosts: localhost
   pre_tasks:
@@ -11,16 +10,21 @@
 
 - name: Prepare localhost
   hosts: localhost
-  connection: local
   vars_files:
     - ../terraform_vars.yml
   tasks:
-    - name: Install packages
+    - name: Install on Linux 
       become: true
       ansible.builtin.package:
         name: dnsutils
         state: present
         update_cache: true
+      when: ansible_facts['os_family'] == "Debian"
+    - name: Install on MacOS
+      ansible.builtin.package:
+        name: sshpass
+        state: present
+      when: ansible_facts['os_family'] == "Darwin"
     - name: Install python dependencies
       ansible.builtin.pip:
         name:
@@ -29,8 +33,8 @@
         break_system_packages: true
     - name: Set LXC SSH key permissions
       ansible.builtin.file:
-        path: '{{ lxc_ssh_key_file }}'
-        mode: '0700'
+        path: "{{ lxc_ssh_key_file }}"
+        mode: "0700"
 
 - name: Add proxmox to known_hosts file
   hosts: localhost
@@ -64,8 +68,10 @@
     - role: lxc
 
 - name: Configure servers
-  hosts: server
+  hosts: server 
   become: true
+  vars_files:
+    - ../terraform_vars.yml
   pre_tasks:
     - name: "Wait for SSH"
       ansible.builtin.wait_for_connection:
@@ -75,22 +81,10 @@
 - name: Configure agents
   hosts: agent
   become: true
+  vars_files:
+    - ../terraform_vars.yml
   pre_tasks:
     - name: "Wait for SSH"
       ansible.builtin.wait_for_connection:
   roles:
     - role: k3s_agent
-# - name: Prepare k3s nodes
-#   hosts: k3s_cluster
-#   gather_facts: true
-#   environment: "{{ proxy_env | default({}) }}"
-#   roles:
-#     - role: prereq
-#       become: true
-#     - role: download
-#       become: true
-#     - role: raspberrypi
-#       become: true
-#     - role: k3s_custom_registries
-#       become: true
-#       when: custom_registries

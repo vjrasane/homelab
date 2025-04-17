@@ -11,13 +11,13 @@
         mode: '0755'
     - name: Install k3s
       ansible.builtin.command:
-        cmd: /tmp/get-k3s.sh server --disable traefik --cluster-init
+        cmd: /tmp/get-k3s.sh server --disable traefik --disable servicelb --flannel-iface eth0  --cluster-init
         creates: /etc/rancher/k3s/k3s.yaml
-    - name: Copy config file to user home directory
-      ansible.builtin.copy:
-        src: /etc/rancher/k3s/k3s.yaml
-        dest: "{{ ansible_user_dir }}/kube.conf"
-        remote_src: true
-        owner: "{{ ansible_user_id }}"
-        follow: true
-        mode: u=rw,g=,o=
+    # - name: Copy config file to user home directory
+    #   ansible.builtin.copy:
+    #     src: /etc/rancher/k3s/k3s.yaml
+    #     dest: "{{ ansible_user_dir }}/kube.conf"
+    #     remote_src: true
+    #     owner: "{{ ansible_user_id }}"
+    #     follow: true
+    #     mode: u=rw,g=,o=

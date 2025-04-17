@@ -1,3 +1,2 @@
 ---
-server_hostname: "{{ groups['server'] | map('extract', hostvars) | map(attribute='ansible_host') | first }}"
-server_token: "{{ groups['server'] | map('extract', hostvars) | map(attribute='token') | first }}"
+k3s_token: "{{ groups['server'] | map('extract', hostvars) | map(attribute='k3s_token') | first }}"
