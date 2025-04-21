@@ -1,0 +1,53 @@
+---
+- name: Stop k3s
+  ansible.builtin.service:
+    name: k3s
+    state: stopped
+  failed_when: false
+
+- name: Create manifests directory on first master
+  ansible.builtin.file:
+    path: /var/lib/rancher/k3s/server/manifests
+    state: directory
+    owner: root
+    group: root
+    mode: "0644"
+
+- name: Download kube-vip RBAC manifest
+  ansible.builtin.get_url:
+    url: https://kube-vip.io/manifests/rbac.yaml
+    dest: /var/lib/rancher/k3s/server/manifests/kube-vip-rbac.yaml
+    mode: "0644"
+
+- name: Create kube-vip manifest in K3s auto-deploy directory
+  ansible.builtin.template:
+    src: vip.yaml.j2
+    dest: /var/lib/rancher/k3s/server/manifests/kube-vip.yaml
+    owner: root
+    group: root
+    mode: "0644"
+
+- name: Download k3s install script
+  ansible.builtin.get_url:
+    url: https://get.k3s.io
+    dest: /tmp/get-k3s.sh
+    mode: "0755"
+
+- name: Install k3s (first server with --cluster-init)
+  ansible.builtin.command:
+    cmd: >
+      /tmp/get-k3s.sh server
+      --disable traefik
+      --disable servicelb
+      --flannel-iface eth0
+      --tls-san {{ k3s_vip }}
+      --node-ip {{ ansible_host }}
+      --cluster-init
+    creates: /usr/local/bin/k3s-uninstall.sh
+
+- name: Start k3s on first server
+  ansible.builtin.systemd:
+    name: k3s
+    state: started
+    enabled: true
+    daemon_reload: true

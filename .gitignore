@@ -20,3 +20,4 @@ terraform/lxc_ssh_key.pem
 terraform/terraform_vars.yml
 lxc_ssh_key.pem
 terraform_vars.yml
+k3s-lxc-control-node-1.config

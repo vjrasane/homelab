@@ -3,78 +3,25 @@
   ansible.builtin.set_fact:
     is_first_server: "{{ ansible_hostname == hostvars[groups['server'][0]]['ansible_hostname'] }}"
 
-# - name: Check if k3s is installed
-#   ansible.builtin.stat:
-#     path: /usr/local/bin/k3s-uninstall.sh
-#   register: check_k3s_installed
-
-# - name: Determine if should skip role 
-#   ansible.builtin.set_fact:
-#     skip_role: check_k3s_installed.stat.exists and not reinstall | default(false) | bool
-
-- name: Stop k3s
-  ansible.builtin.service:
-    name: k3s
-    state: stopped
-  failed_when: false
+- name: "Check if k3s is installed"
+  ansible.builtin.stat:
+    path: /etc/rancher/k3s/k3s.yaml
+  register: k3s_installed
 
 - name: Uninstall previous k3s
   ansible.builtin.command:
     cmd: /usr/local/bin/k3s-uninstall.sh
     removes: /usr/local/bin/k3s-uninstall.sh
-  when: reinstall | default(false) | bool
+  when:
+    - k3s_installed.stat.exists
+    - reinstall | default(false) | bool
 
-- name: Create manifests directory on first master
-  ansible.builtin.file:
-    path: /var/lib/rancher/k3s/server/manifests
-    state: directory
-    owner: root
-    group: root
-    mode: "0644"
-  when: is_first_server
-
-- name: Download kube-vip RBAC manifest
-  ansible.builtin.get_url:
-    url: https://kube-vip.io/manifests/rbac.yaml
-    dest: /var/lib/rancher/k3s/server/manifests/kube-vip-rbac.yaml
-    mode: '0644'
-  when: is_first_server
-
-- name: Create kube-vip manifest in K3s auto-deploy directory
-  ansible.builtin.template:
-    src: vip.yaml.j2
-    dest: /var/lib/rancher/k3s/server/manifests/kube-vip.yaml
-    owner: root
-    group: root
-    mode: "0644"
-  when: is_first_server 
-
-- name: Download k3s install script
-  ansible.builtin.get_url:
-    url: https://get.k3s.io
-    dest: /tmp/get-k3s.sh
-    mode: '0755'
-
-- name: Install k3s (first server with --cluster-init)
-  ansible.builtin.command:
-    cmd: >
-      /tmp/get-k3s.sh server 
-      --disable traefik 
-      --disable servicelb 
-      --flannel-iface eth0 
-      --tls-san {{ k3s_vip }}
-      --node-ip {{ ansible_host }}
-      --cluster-init
-    creates: /usr/local/bin/k3s-uninstall.sh
-  when: is_first_server
-
-- name: Start k3s on first server
-  ansible.builtin.systemd:
-    name: k3s
-    state: started
-    enabled: true
-    daemon_reload: true
-  when: is_first_server
+- name: Install k3s on master server
+  ansible.builtin.include_tasks: install_k3s_master.yml
+  when:
+    - is_first_server
+    - not k3s_installed.stat.exists
+    - not (reinstall | default(false) | bool)
 
 - name: Read k3s token from master
   ansible.builtin.slurp:
@@ -82,57 +29,36 @@
   register: read_k3s_token
   when: is_first_server
 
-- name: Store k3s token 
+- name: Store k3s token
   ansible.builtin.set_fact:
     k3s_token: "{{ read_k3s_token.content | b64decode | regex_replace('\n', '') }}"
   when: is_first_server
 
-- name: Wait for API server on VIP
-  wait_for:
-    host: "{{ k3s_vip }}"
-    port: 6443
-    timeout: 300 
-    state: started
-  when: not is_first_server
-
-- name: Install k3s (join existing server)
-  vars:
-    k3s_token: "{{ groups['server'] | map('extract', hostvars) | map(attribute='k3s_token') | first }}"
-  ansible.builtin.command:
-    cmd: >
-      /tmp/get-k3s.sh server
-      --disable traefik --disable servicelb --flannel-iface eth0
-      --server https://{{ k3s_vip }}:6443
-      --token {{ k3s_token }}
-    creates: /usr/local/bin/k3s-uninstall.sh
-  when: not is_first_server
-
-- name: Start k3s on joined servers
-  ansible.builtin.systemd:
-    name: k3s
-    state: started
-    enabled: true
-    daemon_reload: true
-  when: not is_first_server
+- name: Install k3s on sibling servers
+  ansible.builtin.include_tasks: install_k3s_sibling.yml
+  when:
+    - not is_first_server
+    - not k3s_installed.stat.exists
+    - not (reinstall | default(false) | bool)
 
 - name: Wait for k3s.yml to exist
-  wait_for:
+  ansible.builtin.wait_for:
     path: /etc/rancher/k3s/k3s.yaml
-    timeout: 300 
+    timeout: 300
     state: present
   when: is_first_server
 
 - name: Copy kubeconfig from first server
   ansible.builtin.fetch:
     src: /etc/rancher/k3s/k3s.yaml
-    dest: "{{ playbook_dir }}..//{ inventory_hostname }}-config"
-    flat: yes
+    dest: "{{ playbook_dir }}/../k3s-{{ inventory_hostname }}.config"
+    flat: true
   when: is_first_server
 
 - name: Replace server IP in kubeconfig with VIP
   delegate_to: localhost
   run_once: true
   ansible.builtin.replace:
-    path: "{{ playbook_dir }}../{{ inventory_hostname }}-config"
+    path: "{{ playbook_dir }}/../k3s-{{ inventory_hostname }}.config"
     regexp: 'https://.*:6443'
     replace: "https://{{ k3s_vip }}:6443"
