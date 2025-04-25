@@ -1,33 +1,17 @@
 ---
-- name: Stop k3s-agent
-  ansible.builtin.service:
-    name: k3s-agent
-    state: stopped
-  failed_when: false
+- name: Check if k3s is installed
+  ansible.builtin.stat:
+    path: /usr/local/bin/k3s-agent-uninstall.sh
+  register: k3s_installed
 
 - name: Uninstall previous k3s
-  ansible.builtin.command:
-    cmd: /usr/local/bin/k3s-agent-uninstall.sh
-    removes: /usr/local/bin/k3s-agent-uninstall.sh
-  when: reinstall | default(false) | bool
+  ansible.builtin.include_tasks: uninstall_k3s_agent.yml
+  when:
+    - k3s_installed.stat.exists
+    - reinstall | default(false) | bool
 
-- name: Download k3s install script
-  ansible.builtin.get_url:
-    url: https://get.k3s.io
-    dest: /tmp/get-k3s.sh
-    mode: "0755"
-
-- name: Install k3s
-  ansible.builtin.command:
-    cmd: >
-      /tmp/get-k3s.sh agent 
-      --token '{{ k3s_token }}' 
-      --server 'https://{{ k3s_vip }}:6443'
-    creates: /usr/local/bin/k3s-agent-uninstall.sh
-
-- name: Start k3s-agent
-  ansible.builtin.systemd:
-    name: k3s-agent
-    state: started
-    enabled: true
-    daemon_reload: true
+- name: Install k3s agent
+  ansible.builtin.include_tasks: install_k3s_agent.yml
+  when:
+    - not k3s_installed.stat.exists
+    - reinstall | default(false) | bool

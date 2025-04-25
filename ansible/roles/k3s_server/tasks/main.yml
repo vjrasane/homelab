@@ -9,9 +9,7 @@
   register: k3s_installed
 
 - name: Uninstall previous k3s
-  ansible.builtin.command:
-    cmd: /usr/local/bin/k3s-uninstall.sh
-    removes: /usr/local/bin/k3s-uninstall.sh
+  ansible.builtin.include_tasks: uninstall_k3s_server.yml
   when:
     - k3s_installed.stat.exists
     - reinstall | default(false) | bool
@@ -20,8 +18,7 @@
   ansible.builtin.include_tasks: install_k3s_master.yml
   when:
     - is_first_server
-    - not k3s_installed.stat.exists
-    - not (reinstall | default(false) | bool)
+    - not k3s_installed.stat.exists or (reinstall | default(false) | bool)
 
 - name: Read k3s token from master
   ansible.builtin.slurp:
@@ -38,8 +35,7 @@
   ansible.builtin.include_tasks: install_k3s_sibling.yml
   when:
     - not is_first_server
-    - not k3s_installed.stat.exists
-    - not (reinstall | default(false) | bool)
+    - not k3s_installed.stat.exists or (reinstall | default(false) | bool)
 
 - name: Wait for k3s.yml to exist
   ansible.builtin.wait_for:

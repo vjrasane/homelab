@@ -1,0 +1,11 @@
+---
+- name: Stop k3s-agent
+  ansible.builtin.service:
+    name: k3s-agent
+    state: stopped
+  failed_when: false
+
+- name: Uninstall previous k3s
+  ansible.builtin.command:
+    cmd: /usr/local/bin/k3s-agent-uninstall.sh
+    removes: /usr/local/bin/k3s-agent-uninstall.sh

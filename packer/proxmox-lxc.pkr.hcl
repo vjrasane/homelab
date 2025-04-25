@@ -10,7 +10,7 @@ packer {
 source "lxc" "lxc-k3s" {
   config_file = "lxc-server.conf"
   template_name = "ubuntu"
-  template_environment_vars = [""]
+  template_environment_vars = ["SUITE=trusty"]
 }
 
 build {

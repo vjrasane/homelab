@@ -1,10 +1,4 @@
 ---
-- name: Stop k3s
-  ansible.builtin.service:
-    name: k3s
-    state: stopped
-  failed_when: false
-
 - name: Create manifests directory on first master
   ansible.builtin.file:
     path: /var/lib/rancher/k3s/server/manifests
