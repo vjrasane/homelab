@@ -16,6 +16,12 @@
         timeout: 300
         state: started
 
+    - name: Download k3s install script
+      ansible.builtin.get_url:
+        url: https://get.k3s.io
+        dest: /tmp/get-k3s.sh
+        mode: "0755"
+
     - name: Install k3s (join existing server)
       ansible.builtin.command:
         cmd: >

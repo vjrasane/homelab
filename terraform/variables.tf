@@ -32,11 +32,6 @@ variable "pm_password" {
   sensitive = true
 }
 
-variable "lxc_storage" {
-  type    = string
-  default = "local-zfs"
-}
-
 variable "k3s_vip" {
   type   = string 
   default = "192.168.1.102"
