@@ -3,79 +3,59 @@ terraform {
     proxmox = {
       source = "telmate/proxmox"
     }
-
-    ansible = {
-      source = "ansible/ansible"
-    }
   }
 }
 
+locals {
+  lxc_ips = [
+    "192.168.1.80",
+    "192.168.1.81",
+    "192.168.1.82",
+  ]
+}
 
-# resource "ansible_group" "k3s_cluster" {
-#   name     = "k3s_cluster"
-#   children = ["server", "agent"]
-# }
+provider "proxmox" {
+  pm_api_url          = "http://${var.pm_ip}:8006/api2/json"
+  pm_api_token_id     = "${var.pm_api_user}!${var.pm_api_token_name}"
+  pm_api_token_secret = var.pm_api_token_secret
+  pm_tls_insecure     = true
+}
 
-# resource "ansible_host" "control_node" {
-#   count  = length(proxmox_lxc.control_node)
-#   name   = proxmox_lxc.control_node[count.index].hostname
-#   groups = ["server"]
-#   variables = {
-#     ansible_host                 = trimsuffix(proxmox_lxc.control_node[count.index].network[0].ip, "/32")
-#     ansible_user                 = "root"
-#     ansible_ssh_private_key_file = "${path.module}/${local_file.lxc_ssh_key.filename}"
-#     ansible_python_interpreter   = "/usr/bin/python3"
-#     vmid                         = proxmox_lxc.control_node[count.index].vmid
-#   }
-# }
+module "proxmox_lxc" {
+  count = length(local.lxc_ips)
 
-# resource "ansible_host" "work_node" {
-#   count  = length(proxmox_lxc.work_node)
-#   name   = proxmox_lxc.work_node[count.index].hostname
-#   groups = ["agent"]
-#   variables = {
-#     ansible_host                 = trimsuffix(proxmox_lxc.work_node[count.index].network[0].ip, "/32")
-#     ansible_user                 = "root"
-#     ansible_ssh_private_key_file = "${path.module}/${local_file.lxc_ssh_key.filename}"
-#     ansible_python_interpreter   = "/usr/bin/python3"
-#     vmid                         = proxmox_lxc.work_node[count.index].vmid
-#   }
-# }
+  source = "./modules/proxmox_lxc"
 
-# resource "ansible_host" "proxmox_host" {
-#   name   = "proxmox_host"
-#   groups = ["proxmox"]
-#   variables = {
-#     ansible_host     = var.pm_host
-#     ansible_user     = var.pm_user
-#     ansible_ssh_pass = var.pm_password
-#   }
-# }
+  pm_ip        = var.pm_ip
+  pm_node_name = var.pm_node_name
+  pm_user      = var.pm_user
+  pm_password  = var.pm_password
 
-# resource "local_file" "lxc_ssh_key" {
-#   content         = tls_private_key.lxc_ssh_key.private_key_pem
-#   filename        = "${path.module}/../lxc_ssh_key.pem"
-#   file_permission = "0600"
-# }
+  lxc_ip              = local.lxc_ips[count.index]
+  lxc_vmid            = 100 + count.index
+  lxc_default_gateway = var.lxc_default_gateway
+}
 
-# resource "local_file" "terraform_vars" {
-#   content  = <<EOF
-#   pm_host: ${var.pm_host}
-#   pm_api_user: ${var.pm_api_user}
-#   pm_api_token_name: ${var.pm_api_token_name}
-#   pm_api_token_secret: '${var.pm_api_token_secret}'
-#   lxc_ssh_key_file: ${local_file.lxc_ssh_key.filename}
-#   k3s_vip: ${var.k3s_vip}
-#   EOF
-#   filename = "${path.module}/../terraform_vars.yml"
-# }
+module "k3s_master" {
+  source = "./modules/k3s_master"
 
-# output "lxc_ssh_key" {
-#   value     = tls_private_key.lxc_ssh_key
-#   sensitive = true
-# }
+  lxc_ip              = module.proxmox_lxc[0].lxc_ip
+  lxc_private_key_pem = module.proxmox_lxc[0].lxc_private_key_pem
 
-# output "lxc_password" {
-#   value     = random_password.lxc_password.result
-#   sensitive = true
-# }
+  k3s_vip = var.k3s_vip
+
+  depends_on = [module.proxmox_lxc]
+}
+
+module "k3s_erver" {
+  count = length(local.lxc_ips) - 1
+  source = "./modules/k3s_server"
+
+  lxc_ip              = module.proxmox_lxc[count.index + 1].lxc_ip
+  lxc_private_key_pem = module.proxmox_lxc[count.index + 1].lxc_private_key_pem
+
+  k3s_vip     = var.k3s_vip
+  k3s_token   = module.k3s_master.k3s_token
+
+  depends_on = [module.proxmox_lxc, module.k3s_master]
+}

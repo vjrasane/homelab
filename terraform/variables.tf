@@ -1,3 +1,8 @@
+variable "pm_ip" {
+  type = string  
+  default = "192.168.1.101"
+}
+
 variable "pm_api_token_name" {
   type    = string
   default = "terraform"
@@ -32,13 +37,12 @@ variable "lxc_storage" {
   default = "local-zfs"
 }
 
-variable "lxc_ostemplate" {
-  type = string
-  default = "local:vztmpl/ubuntu-24.10-standard_24.10-1_amd64.tar.zst"
-  # default = "local:vztmpl/debian-12-standard_12.7-1_amd64.tar.zst"
-}
-
 variable "k3s_vip" {
   type   = string 
   default = "192.168.1.102"
+}
+
+variable "lxc_default_gateway" {
+  type = string
+  default = "192.168.1.1"
 }

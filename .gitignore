@@ -2,6 +2,7 @@
 *.env
 */**/.env
 */**/*.env
+**/*.pem
 .vscode/
 .ansible/
 homepage/config/logs/
