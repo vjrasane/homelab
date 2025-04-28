@@ -1,7 +1,7 @@
 .env
 *.env
-*/**/.env
-*/**/*.env
+**/.env
+**/*.env
 **/*.pem
 .vscode/
 .ansible/
@@ -16,9 +16,10 @@ terraform/terraform.tfvars
 terraform/terraform.tfstate
 terraform/terraform.tfstate.backup
 terraform/lxc_ssh_key.pem
-*.tfstate
-*.tfstate.backup
+**/*.tfstate
+**/*.tfstate.backup
 terraform/terraform_vars.yml
 lxc_ssh_key.pem
 terraform_vars.yml
 k3s-lxc-control-node-1.config
+**/.kube/*config

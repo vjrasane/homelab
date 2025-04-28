@@ -24,41 +24,68 @@ resource "ansible_playbook" "install_k3s" {
   }
 }
 
-data "external" "k3s_token" {
-  program = [
-    "bash", "${path.module}/scripts/get_k3s_token.sh"
-  ]
+module "k3s_token" {
+  source = "../ssh_cmd"
 
-  query = {
-    hostname         = var.lxc_ip,
-    user             = var.lxc_user,
-    private_key_file = local_file.lxc_ssh_key.filename,
-  }
+  hostname        = var.lxc_ip
+  user            = var.lxc_user
+  private_key_pem = var.lxc_private_key_pem
+  command         = "cat /var/lib/rancher/k3s/server/token"
 
   depends_on = [ansible_playbook.install_k3s]
 }
 
-data "external" "kube_config" {
-  program = [
-    "bash", "${path.module}/scripts/get_kube_config.sh"
-  ]
+module "kube_config" {
+  source = "../kube_config"
 
-  query = {
-    hostname         = var.lxc_ip,
-    user             = var.lxc_user,
-    private_key_file = local_file.lxc_ssh_key.filename,
-    k3s_vip          = var.k3s_vip
-  }
+  hostname            = var.lxc_ip
+  user                = var.lxc_user
+  private_key_pem     = var.lxc_private_key_pem
+  # k3s_server_hostname = var.k3s_vip
+  k3s_server_hostname = var.lxc_ip
 
   depends_on = [ansible_playbook.install_k3s]
 }
+
+# data "external" "k3s_token" {
+#   program = [
+#     "bash", "${path.module}/scripts/get_k3s_token.sh"
+#   ]
+
+#   query = {
+#     hostname         = var.lxc_ip,
+#     user             = var.lxc_user,
+#     private_key_file = local_file.lxc_ssh_key.filename,
+#   }
+
+#   depends_on = [ansible_playbook.install_k3s]
+# }
+
+# data "external" "kube_config" {
+#   program = [
+#     "bash", "${path.module}/scripts/get_kube_config.sh"
+#   ]
+
+#   query = {
+#     hostname         = var.lxc_ip,
+#     user             = var.lxc_user,
+#     private_key_file = local_file.lxc_ssh_key.filename,
+#     # k3s_vip          = var.k3s_vip
+#   }
+
+#   depends_on = [ansible_playbook.install_k3s]
+# }
 
 output "k3s_token" {
-  value     = data.external.k3s_token.result["k3s_token"]
+  value     = module.k3s_token.result
   sensitive = true
 }
 
 output "kube_config" {
-  value     = data.external.kube_config.result["kube_config"]
+  value     = module.kube_config.config
   sensitive = true
+}
+
+output "k3s_master_ip" {
+  value = var.lxc_ip
 }
