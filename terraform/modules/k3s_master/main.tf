@@ -21,6 +21,7 @@ resource "ansible_playbook" "install_k3s" {
     ansible_ssh_private_key_file = local_file.lxc_ssh_key.filename
     ansible_python_interpreter   = "/usr/bin/python3"
     k3s_vip                      = var.k3s_vip
+    k3s_metallb_ip_pool          = var.k3s_metallb_ip_pool
   }
 }
 
@@ -45,36 +46,6 @@ module "kube_config" {
   depends_on = [ansible_playbook.install_k3s]
 }
 
-
-# data "external" "k3s_token" {
-#   program = [
-#     "bash", "${path.module}/scripts/get_k3s_token.sh"
-#   ]
-
-#   query = {
-#     hostname         = var.lxc_ip,
-#     user             = var.lxc_user,
-#     private_key_file = local_file.lxc_ssh_key.filename,
-#   }
-
-#   depends_on = [ansible_playbook.install_k3s]
-# }
-
-# data "external" "kube_config" {
-#   program = [
-#     "bash", "${path.module}/scripts/get_kube_config.sh"
-#   ]
-
-#   query = {
-#     hostname         = var.lxc_ip,
-#     user             = var.lxc_user,
-#     private_key_file = local_file.lxc_ssh_key.filename,
-#     # k3s_vip          = var.k3s_vip
-#   }
-
-#   depends_on = [ansible_playbook.install_k3s]
-# }
-
 output "k3s_token" {
   value     = module.k3s_token.result
   sensitive = true
@@ -84,19 +55,6 @@ output "kube_config" {
   value     = module.kube_config.config
   sensitive = true
 }
-
-# output "client_certificate" {
-#   value = module.kube_config.client_certificate
-# }
-
-# output "cluster_ca_certificate" {
-#   value = module.kube_config.cluster_ca_certificate
-# }
-
-# output "client_key" {
-#   value     = module.kube_config.client_key
-#   sensitive = true
-# }
 
 output "k3s_master_ip" {
   value = var.lxc_ip

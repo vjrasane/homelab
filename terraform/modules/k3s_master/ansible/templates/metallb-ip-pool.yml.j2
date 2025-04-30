@@ -6,7 +6,7 @@ metadata:
   namespace: metallb-system
 spec:
   addresses:
-  - ${ip_address_range}
+  - {{ k3s_metallb_ip_pool }}
   autoAssign: true
 ---
 apiVersion: metallb.io/v1beta1

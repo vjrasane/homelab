@@ -23,12 +23,24 @@
         dest: /var/lib/rancher/k3s/server/manifests/kube-vip-rbac.yaml
         mode: "0644"
 
-    - name: Create kube-vip manifest in K3s auto-deploy directory
+    - name: Create kube-vip manifest
       ansible.builtin.template:
         src: kube-vip.yml.j2
         dest: /var/lib/rancher/k3s/server/manifests/kube-vip.yaml
         owner: root
         group: root
+        mode: "0644"
+
+    - name: Create MetalLB native manifest
+      ansible.builtin.template:
+        src: metallb-native.yml.j2
+        dest: /var/lib/rancher/k3s/server/manifests/metallb-native.yaml
+        mode: "0644"
+
+    - name: Create MetalLB IP pool manifest
+      ansible.builtin.template:
+        src: metallb-ip-pool.yml.j2
+        dest: /var/lib/rancher/k3s/server/manifests/metallb-ip-pool.yaml
         mode: "0644"
 
     - name: Download k3s install script
