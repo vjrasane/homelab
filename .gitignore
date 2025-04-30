@@ -3,6 +3,9 @@
 **/.env
 **/*.env
 **/*.pem
+**/*.tfstate
+**/*.tfstate.*.backup
+**/.kube
 .vscode/
 .ansible/
 homepage/config/logs/

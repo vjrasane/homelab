@@ -9,27 +9,27 @@
 - name: Install k3s on master
   hosts: all
   tasks:
-    # - name: Create manifests directory on first master
-    #   ansible.builtin.file:
-    #     path: /var/lib/rancher/k3s/server/manifests
-    #     state: directory
-    #     owner: root
-    #     group: root
-    #     mode: "0644"
+    - name: Create manifests directory on first master
+      ansible.builtin.file:
+        path: /var/lib/rancher/k3s/server/manifests
+        state: directory
+        owner: root
+        group: root
+        mode: "0644"
 
-    # - name: Create kube-vip RBAC manifest
-    #   ansible.builtin.template:
-    #     src: kube-vip-rbac.yml.j2
-    #     dest: /var/lib/rancher/k3s/server/manifests/kube-vip-rbac.yaml
-    #     mode: "0644"
+    - name: Create kube-vip RBAC manifest
+      ansible.builtin.template:
+        src: kube-vip-rbac.yml.j2
+        dest: /var/lib/rancher/k3s/server/manifests/kube-vip-rbac.yaml
+        mode: "0644"
 
-    # - name: Create kube-vip manifest in K3s auto-deploy directory
-    #   ansible.builtin.template:
-    #     src: kube-vip.yml.j2
-    #     dest: /var/lib/rancher/k3s/server/manifests/kube-vip.yaml
-    #     owner: root
-    #     group: root
-    #     mode: "0644"
+    - name: Create kube-vip manifest in K3s auto-deploy directory
+      ansible.builtin.template:
+        src: kube-vip.yml.j2
+        dest: /var/lib/rancher/k3s/server/manifests/kube-vip.yaml
+        owner: root
+        group: root
+        mode: "0644"
 
     - name: Download k3s install script
       ansible.builtin.get_url:

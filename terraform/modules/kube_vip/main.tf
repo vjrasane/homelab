@@ -2,11 +2,6 @@ terraform {
   required_version = ">= 0.13"
 
   required_providers {
-    kubernetes = {
-      source  = "hashicorp/kubernetes"
-      version = "~> 2.0"
-    }
-
     kubectl = {
       source  = "gavinbunney/kubectl"
       version = ">= 1.7.0"
@@ -18,74 +13,12 @@ variable "k3s_vip" {
   type = string
 }
 
-resource "kubernetes_service_account" "kube_vip" {
-  metadata {
-    name      = "kube-vip"
-    namespace = "kube-system"
-  }
-}
-
-resource "kubernetes_cluster_role" "kube_vip_role" {
-  metadata {
-    annotations = {
-      "rbac.authorization.kubernetes.io/autoupdate" = "true"
-    }
-    name = "system:kube-vip-role"
-  }
-
-  rule {
-    api_groups = [""]
-    resources  = ["services/status"]
-    verbs      = ["update"]
-  }
-  rule {
-    api_groups = [""]
-    resources  = ["services", "endpoints"]
-    verbs      = ["list", "get", "watch", "update"]
-  }
-  rule {
-    api_groups = [""]
-    resources  = ["nodes"]
-    verbs      = ["list", "get", "watch", "update", "patch"]
-  }
-  rule {
-    api_groups = ["coordination.k8s.io"]
-    resources  = ["leases"]
-    verbs      = ["list", "get", "watch", "update", "create"]
-  }
-  rule {
-    api_groups = ["discovery.k8s.io"]
-    resources  = ["endpointslices"]
-    verbs      = ["list", "get", "watch", "update"]
-  }
-  rule {
-    api_groups = [""]
-    resources  = ["pods"]
-    verbs      = ["list"]
-  }
-}
-
-resource "kubernetes_cluster_role_binding" "kube_vip_role_binding" {
-  metadata {
-    name = "system:kube-vip-role-binding"
-  }
-
-  role_ref {
-    api_group = "rbac.authorization.k8s.io"
-    kind      = "ClusterRole"
-    name      = kubernetes_cluster_role.kube_vip_role.metadata[0].name
-  }
-
-  subject {
-    kind      = "ServiceAccount"
-    name      = kubernetes_service_account.kube_vip.metadata[0].name
-    namespace = kubernetes_service_account.kube_vip.metadata[0].namespace
-  }
+resource "kubectl_manifest" "kube_vip_rbac" {
+  yaml_body = file("${path.module}/manifests/kube-vip-rbac.yml") 
 }
 
 resource "kubectl_manifest" "kube_vip" {
   yaml_body = templatefile("${path.module}/templates/kube-vip-ds.yml.tftpl", {
-    namespace = kubernetes_service_account.kube_vip.metadata[0].namespace
     k3s_vip   = var.k3s_vip
   })
 }

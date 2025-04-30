@@ -14,8 +14,8 @@ terraform {
 locals {
   lxc_ips = [
     "192.168.1.80",
-    # "192.168.1.81",
-    # "192.168.1.82",
+    "192.168.1.81",
+    "192.168.1.82",
   ]
 }
 
@@ -24,29 +24,6 @@ provider "proxmox" {
   pm_api_token_id     = "${var.pm_api_user}!${var.pm_api_token_name}"
   pm_api_token_secret = var.pm_api_token_secret
   pm_tls_insecure     = true
-}
-
-resource "local_file" "k3s_master_config" {
-  content  = module.k3s_master.kube_config
-  filename = "${path.module}/.kube/k3s_master_config"
-}
-
-provider "kubernetes" {
-  alias                  = "k3s_master"
-  host                   = "https://${module.k3s_master.k3s_master_ip}:6443"
-  # token                  = module.k3s_master.k3s_token
-  # cluster_ca_certificate = base64decode(yamldecode(module.k3s_master.kube_config)["clusters"][0]["cluster"]["certificate-authority-data"])
-  # cluster_ca_certificate = 
-  token = module.k3s_master.k3s_token
-  config_path = local_file.k3s_master_config.filename
-}
-
-provider "kubectl" {
-  alias                  = "k3s_master"
-  host                   = "https://${module.k3s_master.k3s_master_ip}:6443"
-  token                  = module.k3s_master.k3s_token
-  # cluster_ca_certificate = base64decode(yamldecode(module.k3s_master.kube_config)["clusters"][0]["cluster"]["certificate-authority-data"])
-  config_path = local_file.k3s_master_config.filename
 }
 
 module "proxmox_lxc" {
@@ -74,32 +51,38 @@ module "k3s_master" {
   depends_on = [module.proxmox_lxc]
 }
 
-module "kube_vip" {
-  source = "./modules/kube_vip"
+module "k3s_server" {
+  count  = length(local.lxc_ips) - 1
+  source = "./modules/k3s_server"
 
-  k3s_vip = var.k3s_vip
+  lxc_ip              = module.proxmox_lxc[count.index + 1].lxc_ip
+  lxc_private_key_pem = module.proxmox_lxc[count.index + 1].lxc_private_key_pem
 
-  providers = {
-    kubernetes = kubernetes.k3s_master
-    kubectl    = kubectl.k3s_master
-  }
+  k3s_vip   = var.k3s_vip
+  k3s_token = module.k3s_master.k3s_token
 }
 
-# module "k3s_server" {
-#   count  = length(local.lxc_ips) - 1
-#   source = "./modules/k3s_server"
+resource "local_file" "k3s_master_config" {
+  content = replace(module.k3s_master.kube_config.file,
+    "server: https://127.0.0.1:6443",
+    "server: https://${module.k3s_master.k3s_master_ip}:6443"
+  )
+  filename = "${path.module}/.kube/k3s_master_config"
+}
 
-#   lxc_ip              = module.proxmox_lxc[count.index + 1].lxc_ip
-#   lxc_private_key_pem = module.proxmox_lxc[count.index + 1].lxc_private_key_pem
+resource "local_file" "k3s_vip_config" {
+  content = replace(module.k3s_master.kube_config.file,
+    "server: https://127.0.0.1:6443",
+    "server: https://${var.k3s_vip}:6443"
+  )
+  filename = "${path.module}/.kube/k3s_vip_config"
+}
 
-#   k3s_vip   = var.k3s_vip
-#   k3s_token = module.k3s_master.k3s_token
-# }
+output "k3s_vip" {
+  value = var.k3s_vip
+}
 
-output "k3s_token" {
-  value     = module.k3s_master.k3s_token
+output "kube_config" {
+  value     = module.k3s_master.kube_config
   sensitive = true
 }
-
-
-

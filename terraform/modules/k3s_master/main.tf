@@ -38,14 +38,13 @@ module "k3s_token" {
 module "kube_config" {
   source = "../kube_config"
 
-  hostname            = var.lxc_ip
-  user                = var.lxc_user
-  private_key_pem     = var.lxc_private_key_pem
-  # k3s_server_hostname = var.k3s_vip
-  k3s_server_hostname = var.lxc_ip
+  hostname        = var.lxc_ip
+  user            = var.lxc_user
+  private_key_pem = var.lxc_private_key_pem
 
   depends_on = [ansible_playbook.install_k3s]
 }
+
 
 # data "external" "k3s_token" {
 #   program = [
@@ -85,6 +84,19 @@ output "kube_config" {
   value     = module.kube_config.config
   sensitive = true
 }
+
+# output "client_certificate" {
+#   value = module.kube_config.client_certificate
+# }
+
+# output "cluster_ca_certificate" {
+#   value = module.kube_config.cluster_ca_certificate
+# }
+
+# output "client_key" {
+#   value     = module.kube_config.client_key
+#   sensitive = true
+# }
 
 output "k3s_master_ip" {
   value = var.lxc_ip
