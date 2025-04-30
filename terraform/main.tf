@@ -6,7 +6,7 @@ terraform {
 
     kubectl = {
       source  = "gavinbunney/kubectl"
-      version = ">= 1.7.0"
+      version = ">= 1.19.0"
     }
   }
 }
@@ -17,6 +17,14 @@ locals {
     "192.168.1.81",
     "192.168.1.82",
   ]
+}
+
+provider "kubectl" {
+  host                   = "https://${var.k3s_vip}:6443"
+  cluster_ca_certificate = module.k3s_master.kube_config.cluster_ca_certificate
+  client_certificate     = module.k3s_master.kube_config.client_certificate
+  client_key             = module.k3s_master.kube_config.client_key
+  load_config_file       = false
 }
 
 provider "proxmox" {
@@ -60,6 +68,12 @@ module "k3s_server" {
 
   k3s_vip   = var.k3s_vip
   k3s_token = module.k3s_master.k3s_token
+}
+
+module "metallb" {
+  source = "./modules/metallb"
+
+  ip_address_range = var.k3s_lb_address_range
 }
 
 resource "local_file" "k3s_master_config" {

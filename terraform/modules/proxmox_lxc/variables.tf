@@ -52,5 +52,3 @@ variable "lxc_storage_size" {
   type    = number
   default = 4
 }
-
-

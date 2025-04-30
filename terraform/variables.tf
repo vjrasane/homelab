@@ -37,6 +37,11 @@ variable "k3s_vip" {
   default = "192.168.1.102"
 }
 
+variable "k3s_lb_address_range" {
+  type    = string
+  default = "192.168.1.200-192.168.1.220"
+}
+
 variable "lxc_default_gateway" {
   type = string
   default = "192.168.1.1"

@@ -4,12 +4,12 @@ terraform {
       source  = "gavinbunney/kubectl"
       version = ">= 1.19.0"
     }
-  }
-}
 
-variable "k3s_lb_address_range" {
-  type    = string
-  default = "192.168.1.200-192.168.1.220"
+    helm = {
+      source  = "hashicorp/helm"
+      version = ">= 2.17.0"
+    }
+  }
 }
 
 data "terraform_remote_state" "infra" {
@@ -26,7 +26,6 @@ locals {
 }
 
 provider "kubectl" {
-  alias                  = "k3s"
   host                   = "https://${local.k3s_vip}:6443"
   cluster_ca_certificate = local.kube_config.cluster_ca_certificate
   client_certificate     = local.kube_config.client_certificate
@@ -34,13 +33,27 @@ provider "kubectl" {
   load_config_file       = false
 }
 
-module "metallb" {
-  source = "../modules/metallb"
-
-  ip_address_range = var.k3s_lb_address_range
-
-  providers = {
-    kubectl = kubectl.k3s
+provider "helm" {
+  kubernetes {
+    host                   = "https://${local.k3s_vip}:6443"
+    cluster_ca_certificate = local.kube_config.cluster_ca_certificate
+    client_certificate     = local.kube_config.client_certificate
+    client_key             = local.kube_config.client_key
   }
 }
 
+# resource "helm_release" "nginx_ingress" {
+#     name = "nginx-ingress"
+
+#     repository = "https://helm.nginx.com/stable"
+#     chart = "nginx-ingress"
+
+#     create_namespace = true
+
+#     namespace = "nginx-ingress"
+
+#     set {
+#         name  = "controller.extraArgs.enable-ssl-passthrough"
+#         value = "true"
+#     }
+# }
