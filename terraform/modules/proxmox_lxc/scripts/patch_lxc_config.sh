@@ -3,7 +3,6 @@
 vmid="${1}"
 
 files_dir="/tmp/files"
-# [[ -d "${files_dir}" ]] || { echo "Directory ${files_dir} does not exist"; exit 1; }
 
 pct stop "${vmid}" || true
 until (pct status "${vmid}" | grep -q "stopped"); do
@@ -26,11 +25,6 @@ until (pct status "${vmid}" | grep -q "running"); do
   echo "Waiting for VM ${vmid} to start..."
   sleep 1
 done
-
-# pct push "${vmid}" ${files_dir}/conf-kmsg.sh /usr/local/bin/conf-kmsg.sh 
-# pct exec "${vmid}" -- chmod +x /usr/local/bin/conf-kmsg.sh
-# pct push "${vmid}" ${files_dir}/conf-kmsg.service /etc/systemd/system/conf-kmsg.service
-# pct exec "${vmid}" -- systemctl enable --now conf-kmsg   
 
 until [[ -n $(lxc-info -n "${vmid}" -iH) ]]; do
   echo "Waiting for VM ${vmid} to receive an IP..."
