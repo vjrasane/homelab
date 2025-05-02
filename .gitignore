@@ -5,6 +5,8 @@
 **/*.pem
 **/*.tfstate
 **/*.tfstate.*.backup
+**/*.tfstate.backup
+**/*.tfvars
 **/.kube
 .vscode/
 .ansible/
@@ -19,8 +21,6 @@ terraform/terraform.tfvars
 terraform/terraform.tfstate
 terraform/terraform.tfstate.backup
 terraform/lxc_ssh_key.pem
-**/*.tfstate
-**/*.tfstate.backup
 terraform/terraform_vars.yml
 lxc_ssh_key.pem
 terraform_vars.yml
