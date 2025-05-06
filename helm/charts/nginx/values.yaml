@@ -1,0 +1,12 @@
+hostname: ""
+
+deployment:
+  replicas: 1
+  image: nginx:latest
+  containerPort: 80
+
+service:
+  port: 80
+
+clusterIssuer:
+  name: ""

@@ -52,3 +52,11 @@ variable "lxc_storage_size" {
   type    = number
   default = 4
 }
+
+variable "lxc_private_key_file" {
+  type      = string
+}
+
+variable "public_key_openssh" {
+  type = string
+}

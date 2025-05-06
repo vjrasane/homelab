@@ -1,0 +1,43 @@
+
+releases:
+  - name: cloudflare-api-key-secret
+    namespace: cloudflare
+    createNamespace: true
+    chart: ../charts/secret
+    values:
+      - secret: 
+          key:  api-key
+          value: ref+file://helm.secret.yaml#/cloudflare/apiKey
+
+  - name: cloudflare-api-token-secret
+    namespace: cloudflare
+    createNamespace: true
+    chart: ../charts/secret
+    values:
+      - secret: 
+          key: api-token
+          value: ref+file://helm.secret.yaml#/cloudflare/apiToken
+
+  - name: cloudflare-ddns
+    namespace: cloudflare
+    createNamespace: true
+    chart: ../charts/cloudflare-ddns
+    values:
+      - schedule: "*/5 * * * *"
+      - domains: ref+file://helm.secret.yaml#/cloudflare/domains
+
+  - name: cert-manager
+    namespace: cloudflare
+    createNamespace: true
+    chart: jetstack/cert-manager
+    version: v1.17.2
+    set:
+      - name: installCRDs
+        value: "true"
+
+  - name: cluster-issuer
+    namespace: cloudflare
+    createNamespace: true
+    chart: ../charts/cluster-issuer
+    values:
+      - cloudflareEmail: ref+file://helm.secret.yaml#/cloudflare/email

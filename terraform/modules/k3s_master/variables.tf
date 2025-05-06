@@ -16,7 +16,6 @@ variable "lxc_user" {
   default = "root"
 }
 
-variable "lxc_private_key_pem" {
+variable "lxc_private_key_file" {
   type      = string
-  sensitive = true
 }

@@ -7,19 +7,12 @@ variable "user" {
   default = "root"
 }
 
-variable "private_key_pem" {
+variable "private_key_file" {
   type      = string
-  sensitive = true
 }
 
 variable "command" {
   type = string
-}
-
-resource "local_file" "private_key_file" {
-  content         = var.private_key_pem
-  filename        = "${path.module}/.ssh/${var.hostname}.pem"
-  file_permission = "0600"
 }
 
 data "external" "ssh_cmd" {
@@ -30,7 +23,7 @@ data "external" "ssh_cmd" {
   query = {
     hostname         = var.hostname,
     user             = var.user,
-    private_key_file = local_file.private_key_file.filename,
+    private_key_file = var.private_key_file,
     command          = var.command
   }
 }

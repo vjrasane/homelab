@@ -16,11 +16,6 @@ locals {
   lxc_storage    = "local-zfs"
 }
 
-resource "tls_private_key" "lxc_ssh_key" {
-  algorithm = "RSA"
-  rsa_bits  = 4096
-}
-
 resource "random_password" "lxc_password" {
   length  = 16
   special = true
@@ -59,7 +54,7 @@ resource "proxmox_lxc" "ct" {
     gw     = var.lxc_default_gateway
   }
 
-  ssh_public_keys = tls_private_key.lxc_ssh_key.public_key_openssh
+  ssh_public_keys = var.public_key_openssh
 
   connection {
     host     = var.pm_ip
@@ -87,20 +82,18 @@ resource "proxmox_lxc" "ct" {
   }
 }
 
-resource "local_file" "lxc_ssh_key" {
-  content         = tls_private_key.lxc_ssh_key.private_key_pem
-  filename        = "${path.module}/.ssh/${proxmox_lxc.ct.vmid}-${proxmox_lxc.ct.hostname}.pem"
-  file_permission = "0600"
-}
-
 resource "ansible_playbook" "configure_lxc" {
   name       = var.lxc_ip
   playbook   = "${path.module}/ansible/configure_lxc.yml"
   replayable = false
   extra_vars = {
     ansible_user                 = "root"
-    ansible_ssh_private_key_file = local_file.lxc_ssh_key.filename
+    ansible_ssh_private_key_file = var.lxc_private_key_file
     ansible_python_interpreter   = "/usr/bin/python3"
+  }
+  
+  timeouts {
+    create = "1m"
   }
 
   depends_on = [proxmox_lxc.ct]
@@ -108,11 +101,6 @@ resource "ansible_playbook" "configure_lxc" {
 
 output "lxc_password" {
   value     = random_password.lxc_password.result
-  sensitive = true
-}
-
-output "lxc_private_key_pem" {
-  value     = tls_private_key.lxc_ssh_key.private_key_pem
   sensitive = true
 }
 

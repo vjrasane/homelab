@@ -6,19 +6,13 @@ terraform {
   }
 }
 
-resource "local_file" "lxc_ssh_key" {
-  content         = var.lxc_private_key_pem
-  filename        = "${path.module}/.ssh/${var.lxc_ip}.pem"
-  file_permission = "0600"
-}
-
 resource "ansible_playbook" "install_k3s" {
   name       = var.lxc_ip
   playbook   = "${path.module}/ansible/install_k3s_master.yml"
   replayable = false
   extra_vars = {
     ansible_user                 = var.lxc_user
-    ansible_ssh_private_key_file = local_file.lxc_ssh_key.filename
+    ansible_ssh_private_key_file = var.lxc_private_key_file
     ansible_python_interpreter   = "/usr/bin/python3"
     k3s_vip                      = var.k3s_vip
     k3s_metallb_ip_pool          = var.k3s_metallb_ip_pool
@@ -30,7 +24,7 @@ module "k3s_token" {
 
   hostname        = var.lxc_ip
   user            = var.lxc_user
-  private_key_pem = var.lxc_private_key_pem
+  private_key_file = var.lxc_private_key_file
   command         = "cat /var/lib/rancher/k3s/server/token"
 
   depends_on = [ansible_playbook.install_k3s]
@@ -41,7 +35,7 @@ module "kube_config" {
 
   hostname        = var.lxc_ip
   user            = var.lxc_user
-  private_key_pem = var.lxc_private_key_pem
+  private_key_file = var.lxc_private_key_file
 
   depends_on = [ansible_playbook.install_k3s]
 }

@@ -4,41 +4,10 @@ repositories:
   - name: traefik
     url: https://helm.traefik.io/traefik
 
+helmfiles:
+  - ./cloudflare/helmfile.yaml
+
 releases:
-  - name: cloudflare-secrets
-    namespace: cloudflare
-    createNamespace: true
-    chart: ./charts/cloudflare-secrets
-    values:
-      - cloudflareApiTokenSecret: 
-          token: ref+file://helm.secret.yaml#/cloudflare/apiToken
-      - cloudflareApiKeySecret:
-          apiKey: ref+file://helm.secret.yaml#/cloudflare/apiKey
-
-  - name: cloudflare-ddns
-    namespace: cloudflare
-    createNamespace: true
-    chart: ./charts/cloudflare-ddns
-    values:
-      - schedule: "*/5 * * * *"
-      - domains: ref+file://helm.secret.yaml#/cloudflare/domains
-
-  - name: cert-manager
-    namespace: cloudflare
-    createNamespace: true
-    chart: jetstack/cert-manager
-    version: v1.17.2
-    set:
-      - name: installCRDs
-        value: "true"
-
-  - name: cluster-issuer
-    namespace: cloudflare
-    createNamespace: true
-    chart: ./charts/cluster-issuer
-    values:
-      - cloudflareEmail: ref+file://helm.secret.yaml#/cloudflare/email
-
   - name: traefik
     namespace: traefik
     createNamespace: true
@@ -61,3 +30,13 @@ releases:
           websecure:
             tls:
               enabled: true
+  - name: nginx
+    namespace: nginx
+    createNamespace: true
+    chart: ./charts/nginx
+    values:
+      - helm.secret.yaml
+      - service:
+          port: 80
+        clusterIssuer:
+          name: cluster-issuer

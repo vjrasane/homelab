@@ -21,6 +21,17 @@ provider "proxmox" {
   pm_tls_insecure     = true
 }
 
+resource "tls_private_key" "lxc_ssh_key" {
+  algorithm = "RSA"
+  rsa_bits  = 4096
+}
+
+resource "local_file" "lxc_ssh_key" {
+  content         = tls_private_key.lxc_ssh_key.private_key_pem
+  filename        = "${path.module}/lxc.pem"
+  file_permission = "0600"
+}
+
 module "proxmox_lxc" {
   count = length(local.lxc_ips)
 
@@ -34,15 +45,18 @@ module "proxmox_lxc" {
   lxc_ip              = local.lxc_ips[count.index]
   lxc_vmid            = 100 + count.index
   lxc_default_gateway = var.lxc_default_gateway
+  lxc_private_key_file = local_file.lxc_ssh_key.filename
+
+  public_key_openssh = tls_private_key.lxc_ssh_key.public_key_openssh
 }
 
 module "k3s_master" {
   source = "./modules/k3s_master"
 
-  lxc_ip              = module.proxmox_lxc[0].lxc_ip
-  lxc_private_key_pem = module.proxmox_lxc[0].lxc_private_key_pem
-  k3s_vip             = var.k3s_vip
-  k3s_metallb_ip_pool = var.k3s_metallb_address_range
+  lxc_ip               = module.proxmox_lxc[0].lxc_ip
+  lxc_private_key_file = local_file.lxc_ssh_key.filename
+  k3s_vip              = var.k3s_vip
+  k3s_metallb_ip_pool  = var.k3s_metallb_address_range
 
   depends_on = [module.proxmox_lxc]
 }
@@ -52,7 +66,7 @@ module "k3s_server" {
   source = "./modules/k3s_server"
 
   lxc_ip              = module.proxmox_lxc[count.index + 1].lxc_ip
-  lxc_private_key_pem = module.proxmox_lxc[count.index + 1].lxc_private_key_pem
+  lxc_private_key_file = local_file.lxc_ssh_key.filename 
 
   k3s_vip   = var.k3s_vip
   k3s_token = module.k3s_master.k3s_token
@@ -72,6 +86,11 @@ resource "local_file" "k3s_vip_config" {
     "server: https://${var.k3s_vip}:6443"
   )
   filename = "${path.module}/.kube/k3s_vip_config"
+}
+
+resource "local_file" "k3s_config" {
+  content  = local_file.k3s_vip_config.content
+  filename = "${path.module}/../.kube/config"
 }
 
 output "k3s_vip" {

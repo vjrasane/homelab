@@ -1,0 +1,14 @@
+version: '3'
+includes:
+  tf: 
+    taskfile: ./terraform/Taskfile.yaml
+    dir: ./terraform
+  helm:
+    taskfile: ./helm/Taskfile.yaml
+    dir: ./helm
+
+tasks:
+  default:
+    silent: true
+    cmds:
+      - task -l

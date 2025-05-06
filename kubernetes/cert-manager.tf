@@ -37,40 +37,11 @@ resource "helm_release" "cert_manager" {
   }
 }
 
-locals {
-  cluster_issuer_manifest = {
-    apiVersion = "cert-manager.io/v1"
-    kind       = "ClusterIssuer"
-    metadata = {
-      name      = "cloudflare-cluster-issuer"
-      namespace = local.cloudflare_namespace
-    }
-    spec = {
-      acme = {
-        email  = var.cloudflare_email
-        server = "https://acme-v02.api.letsencrypt.org/directory"
-        privateKeySecretRef = {
-          name = "cloudflare-cluster-issuer-account-key"
-        }
-        solvers = [
-          {
-            dns01 = {
-              cloudflare = {
-                email = var.cloudflare_email
-                apiKeySecretRef = {
-                  name = local.cloudflare_api_key_secret 
-                  key  = "api-key"
-                }
-              }
-            }
-          }
-        ]
-      }
-    }
-  }
-}
-
 resource "kubectl_manifest" "cluster_issuer" {
-  yaml_body = yamlencode(local.cluster_issuer_manifest)
+  yaml_body = templatefile("${path.module}/templates/cluster-issuer.yml.tftpl", {
+    namespace         = local.cloudflare_namespace
+    cloudflare_email  = var.cloudflare_email
+    cloudflare_api_key_secret = local.cloudflare_api_key_secret
+  }) 
   depends_on = [helm_release.cert_manager]
 }

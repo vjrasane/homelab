@@ -4,9 +4,11 @@
 **/*.env
 **/*.pem
 **/*.tfstate
+**/*.tfstate.*
 **/*.tfstate.*.backup
 **/*.tfstate.backup
 **/*.tfvars
+**/*.secret.*
 **/.kube
 .vscode/
 .ansible/

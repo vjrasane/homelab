@@ -7,9 +7,8 @@ variable "user" {
   default = "root"
 }
 
-variable "private_key_pem" {
+variable "private_key_file" {
   type      = string
-  sensitive = true
 }
 
 module "get_kube_config" {
@@ -17,8 +16,7 @@ module "get_kube_config" {
 
   hostname        = var.hostname
   user            = var.user
-  private_key_pem = var.private_key_pem
-  # command         = "cat /etc/rancher/k3s/k3s.yaml | sed 's|server: https://127.0.0.1:6443|server: https://${var.k3s_server_hostname}:6443|'"
+  private_key_file = var.private_key_file
   command = "cat /etc/rancher/k3s/k3s.yaml"
 }
 

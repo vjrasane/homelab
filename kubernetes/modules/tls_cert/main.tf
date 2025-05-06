@@ -44,7 +44,12 @@ locals {
 }
 
 resource "kubectl_manifest" "cert" {
-  yaml_body = yamlencode(local.cert_manifest)
+  yaml_body = templatefile("${path.module}/templates/certificate.yml", {
+    namespace = var.namespace
+    secret_name = var.secret_name
+    issuer_name = var.issuer_name
+    domain_name = var.domain_name
+  })
 }
 
 output "secret_name" {
