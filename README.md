@@ -1,4 +1,11 @@
-# homelab 
+# homelab
+
+## Pre-commit
+
+```shell
+pip install pre-commit
+pre-commit install
+```
 
 ## Taskfile
 
