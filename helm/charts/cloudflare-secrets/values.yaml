@@ -1,9 +1,0 @@
-cloudflareApiTokenSecret:
-  name: cloudflare-api-token-secret
-  key: api-token
-  token: ""
-
-cloudflareApiKeySecret:
-  name: cloudflare-api-key-secret
-  key: api-key
-  apiKey: ""

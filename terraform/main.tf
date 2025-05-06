@@ -42,9 +42,9 @@ module "proxmox_lxc" {
   pm_user      = var.pm_user
   pm_password  = var.pm_password
 
-  lxc_ip              = local.lxc_ips[count.index]
-  lxc_vmid            = 100 + count.index
-  lxc_default_gateway = var.lxc_default_gateway
+  lxc_ip               = local.lxc_ips[count.index]
+  lxc_vmid             = 100 + count.index
+  lxc_default_gateway  = var.lxc_default_gateway
   lxc_private_key_file = local_file.lxc_ssh_key.filename
 
   public_key_openssh = tls_private_key.lxc_ssh_key.public_key_openssh
@@ -65,8 +65,8 @@ module "k3s_server" {
   count  = length(local.lxc_ips) - 1
   source = "./modules/k3s_server"
 
-  lxc_ip              = module.proxmox_lxc[count.index + 1].lxc_ip
-  lxc_private_key_file = local_file.lxc_ssh_key.filename 
+  lxc_ip               = module.proxmox_lxc[count.index + 1].lxc_ip
+  lxc_private_key_file = local_file.lxc_ssh_key.filename
 
   k3s_vip   = var.k3s_vip
   k3s_token = module.k3s_master.k3s_token
@@ -93,8 +93,11 @@ resource "local_file" "k3s_config" {
   filename = "${path.module}/../.kube/config"
 }
 
-output "k3s_vip" {
-  value = var.k3s_vip
+output "k3s_endpoint" {
+  value = replace(module.k3s_master.kube_config.server,
+    "https://127.0.0.1",
+    "https://${var.k3s_vip}"
+  )
 }
 
 output "kube_config" {

@@ -1,6 +1,6 @@
 version: '3'
 includes:
-  tf: 
+  tf:
     taskfile: ./terraform/Taskfile.yaml
     dir: ./terraform
   helm:
@@ -12,3 +12,11 @@ tasks:
     silent: true
     cmds:
       - task -l
+
+  hide:
+    cmds:
+      - git secret hide -m -P
+
+  reveal:
+    cmds:
+      - git secret reveal -f -P

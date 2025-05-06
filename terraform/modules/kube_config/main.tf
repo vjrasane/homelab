@@ -8,16 +8,16 @@ variable "user" {
 }
 
 variable "private_key_file" {
-  type      = string
+  type = string
 }
 
 module "get_kube_config" {
   source = "../ssh_cmd"
 
-  hostname        = var.hostname
-  user            = var.user
+  hostname         = var.hostname
+  user             = var.user
   private_key_file = var.private_key_file
-  command = "cat /etc/rancher/k3s/k3s.yaml"
+  command          = "cat /etc/rancher/k3s/k3s.yaml"
 }
 
 output "cluster_ca_certificate" {
@@ -40,6 +40,7 @@ locals {
 output "config" {
   value = {
     file                   = module.get_kube_config.result
+    server                 = local.cluster_config["server"]
     client_key             = base64decode(local.user_config["client-key-data"])
     client_certificate     = base64decode(local.user_config["client-certificate-data"])
     cluster_ca_certificate = base64decode(local.cluster_config["certificate-authority-data"])

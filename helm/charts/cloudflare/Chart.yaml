@@ -1,6 +1,6 @@
 apiVersion: v2
-name: cloudflare-api-token
-description: A Helm chart for Kubernetes to create a Cloudflare API secrets 
+name: cloudflare
+description: A Helm chart for creating Cloudflare resources
 
 # A chart can be either an 'application' or a 'library' chart.
 #

@@ -1,7 +1,7 @@
 apiVersion: batch/v1
 kind: CronJob
 metadata:
-  name: {{ .Release.Name }} 
+  name: {{ .Release.Name }}
   namespace: {{ .Release.Namespace }}
 spec:
   schedule: {{ .Values.schedule | quote }}
@@ -20,8 +20,8 @@ spec:
                 - name: CLOUDFLARE_API_TOKEN
                   valueFrom:
                     secretKeyRef:
-                      name: {{ required "Cloudflare API token secret name is required" .Values.cloudflareApiTokenSecret.name }} 
-                      key: {{ required "Cloudflare API token secret key is required" .Values.cloudflareApiTokenSecret.key }} 
+                      name: {{ required "Cloudflare API token secret name is required" .Values.cloudflareApiTokenSecret.name }}
+                      key: {{ required "Cloudflare API token secret key is required" .Values.cloudflareApiTokenSecret.key }}
                 - name: DOMAINS
                   value: {{ required "Domains are required!" .Values.domains }}
                 - name: PROXIED

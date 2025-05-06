@@ -1,6 +1,6 @@
 apiVersion: v2
-name: secret
-description: A Helm chart for Kubernetes
+name: middleware
+description: A Helm chart for creating Traefik middleware
 
 # A chart can be either an 'application' or a 'library' chart.
 #

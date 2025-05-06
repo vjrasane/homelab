@@ -1,0 +1,21 @@
+apiKeySecret:
+  name: cloudflare-api-key-secret
+  key: api-key
+  value: ""
+apiTokenSecret:
+  name: cloudflare-api-token-secret
+  key: api-token
+  value: ""
+
+cloudflare-ddns:
+  schedule: "*/5 * * * *"
+  domains: ""
+  cloudflareApiTokenSecret:
+    name: cloudflare-api-token-secret
+    key: api-token
+
+cluster-issuer:
+  cloudflareEmail: ""
+  cloudflareApiKeySecret:
+    name: cloudflare-api-key-secret
+    key: api-key

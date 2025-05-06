@@ -3,6 +3,9 @@ kind: Ingress
 metadata:
   name: {{ .Release.Name }}
   namespace: {{ .Release.Namespace }}
+  annotations:
+    traefik.ingress.kubernetes.io/router.entrypoints: websecure
+    traefik.ingress.kubernetes.io/router.middlewares: traefik-hsts@kubernetescrd
 spec:
   rules:
     - host: {{ required "Hostname is not defined" .Values.hostname }}
@@ -10,12 +13,12 @@ spec:
         paths:
           - path: /
             pathType: Prefix
-            backend: 
+            backend:
               service:
                 name: {{ .Release.Name }}
                 port:
                   number: {{ .Values.service.port }}
   tls:
-    - secretName: nginx-tls-certificate-secret
-      hosts: 
+    - secretName: nginx-tls-certificate-secret  # pragma: allowlist secret
+      hosts:
         - {{ required "Hostname is not defined" .Values.hostname }}
