@@ -1,0 +1,35 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: {{ .Release.Name }} 
+  namespace: {{ .Release.Namespace }}
+spec:
+  schedule: {{ .Values.schedule | quote }}
+  successfulJobsHistoryLimit: 1
+  failedJobsHistoryLimit: 1
+  jobTemplate:
+    spec:
+      backoffLimit: 3
+      template:
+        spec:
+          containers:
+            - name: cloudflare-ddns
+              image: favonia/cloudflare-ddns:latest
+              imagePullPolicy: IfNotPresent
+              env:
+                - name: CLOUDFLARE_API_TOKEN
+                  valueFrom:
+                    secretKeyRef:
+                      name: {{ required "Cloudflare API token secret name is required" .Values.cloudflareApiTokenSecret.name }} 
+                      key: {{ required "Cloudflare API token secret key is required" .Values.cloudflareApiTokenSecret.key }} 
+                - name: DOMAINS
+                  value: {{ required "Domains are required!" .Values.domains }}
+                - name: PROXIED
+                  value: "false"
+                - name: UPDATE_CRON
+                  value: "@once"
+                - name: UPDATE_ON_START
+                  value: "true"
+                - name: IP6_PROVIDER
+                  value: "none" # Optional: disable IPv6 if not needed
+          restartPolicy: Never

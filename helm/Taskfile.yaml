@@ -1,0 +1,13 @@
+version: '3'
+
+tasks:
+  default:
+    cmds:
+      - task: apply 
+
+  apply:
+    desc: Apply Helmfile
+    env:
+      KUBECONFIG: ../.kube/config
+    cmds:
+      - helmfile -f helmfile.yaml apply

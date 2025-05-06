@@ -1,0 +1,9 @@
+name: cloudflare-ddns
+namespace: default
+schedule: "*/5 * * * *"
+domains: ""
+cloudflareApiTokenSecret:
+  name: cloudflare-api-token-secret
+  key: api-token
+
+

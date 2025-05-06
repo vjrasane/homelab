@@ -1,0 +1,4 @@
+cloudflareApiKeySecret: 
+  name: cloudflare-api-key-secret
+  key: api-key
+cloudflareEmail: ""

@@ -1,0 +1,63 @@
+repositories:
+  - name: jetstack
+    url: https://charts.jetstack.io
+  - name: traefik
+    url: https://helm.traefik.io/traefik
+
+releases:
+  - name: cloudflare-secrets
+    namespace: cloudflare
+    createNamespace: true
+    chart: ./charts/cloudflare-secrets
+    values:
+      - cloudflareApiTokenSecret: 
+          token: ref+file://helm.secret.yaml#/cloudflare/apiToken
+      - cloudflareApiKeySecret:
+          apiKey: ref+file://helm.secret.yaml#/cloudflare/apiKey
+
+  - name: cloudflare-ddns
+    namespace: cloudflare
+    createNamespace: true
+    chart: ./charts/cloudflare-ddns
+    values:
+      - schedule: "*/5 * * * *"
+      - domains: ref+file://helm.secret.yaml#/cloudflare/domains
+
+  - name: cert-manager
+    namespace: cloudflare
+    createNamespace: true
+    chart: jetstack/cert-manager
+    version: v1.17.2
+    set:
+      - name: installCRDs
+        value: "true"
+
+  - name: cluster-issuer
+    namespace: cloudflare
+    createNamespace: true
+    chart: ./charts/cluster-issuer
+    values:
+      - cloudflareEmail: ref+file://helm.secret.yaml#/cloudflare/email
+
+  - name: traefik
+    namespace: traefik
+    createNamespace: true
+    chart: traefik/traefik
+    version: v35.2.0
+    values:
+      - service:
+          spec:
+            loadBalancerIP: 192.168.1.220
+        ingressClass:
+          enabled: true
+          isDefaultClass: true
+        ports:
+          web:
+            redirections:
+              entryPoint:
+                to: websecure
+                scheme: https
+                permanent: true
+          websecure:
+            tls:
+              enabled: true
