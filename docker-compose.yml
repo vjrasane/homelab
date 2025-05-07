@@ -7,3 +7,4 @@ include:
   - ./ofelia/docker-compose.yml
   - ./authelia/docker-compose.yml
   - ./tandoor/docker-compose.yml
+  - ./bind9/docker-compose.yml

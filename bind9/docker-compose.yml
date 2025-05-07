@@ -1,0 +1,12 @@
+services:
+  bind9:
+    image: ubuntu/bind9:latest
+    restart: unless-stopped
+    ports:
+      - 53:53/tcp
+      - 53:53/udp
+    volumes:
+      - ./config:/etc/bind
+    env_file: .env
+    environment:
+      - BIND9_USER=root
