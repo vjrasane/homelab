@@ -12,6 +12,7 @@
 **/.kube
 .vscode/
 .ansible/
+**/.bitwarden
 homepage/config/logs/
 volumes/
 .gitsecret/keys/random_seed
@@ -29,3 +30,5 @@ terraform_vars.yml
 k3s-lxc-control-node-1.config
 **/.kube/*config
 **/*.tgz
+
+!.bws.env
