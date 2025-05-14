@@ -6,6 +6,13 @@ terraform {
   }
 }
 
+module "prepare_k3s_lxc" {
+  source = "../k3s_lxc"
+
+  lxc_ip               = var.lxc_ip
+  lxc_private_key_file = var.lxc_private_key_file
+}
+
 resource "ansible_playbook" "install_k3s" {
   name       = var.lxc_ip
   playbook   = "${path.module}/ansible/install_k3s_server.yml"
@@ -17,5 +24,6 @@ resource "ansible_playbook" "install_k3s" {
     k3s_vip                      = var.k3s_vip
     k3s_token                    = var.k3s_token
   }
-}
 
+  depends_on = [module.prepare_k3s_lxc]
+}

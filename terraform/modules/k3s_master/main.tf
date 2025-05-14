@@ -6,6 +6,13 @@ terraform {
   }
 }
 
+module "prepare_k3s_lxc" {
+  source = "../k3s_lxc"
+
+  lxc_ip               = var.lxc_ip
+  lxc_private_key_file = var.lxc_private_key_file
+}
+
 resource "ansible_playbook" "install_k3s" {
   name       = var.lxc_ip
   playbook   = "${path.module}/ansible/install_k3s_master.yml"
@@ -17,15 +24,17 @@ resource "ansible_playbook" "install_k3s" {
     k3s_vip                      = var.k3s_vip
     k3s_metallb_ip_pool          = var.k3s_metallb_ip_pool
   }
+
+  depends_on = [module.prepare_k3s_lxc]
 }
 
 module "k3s_token" {
   source = "../ssh_cmd"
 
-  hostname        = var.lxc_ip
-  user            = var.lxc_user
+  hostname         = var.lxc_ip
+  user             = var.lxc_user
   private_key_file = var.lxc_private_key_file
-  command         = "cat /var/lib/rancher/k3s/server/token"
+  command          = "cat /var/lib/rancher/k3s/server/token"
 
   depends_on = [ansible_playbook.install_k3s]
 }
@@ -33,8 +42,8 @@ module "k3s_token" {
 module "kube_config" {
   source = "../kube_config"
 
-  hostname        = var.lxc_ip
-  user            = var.lxc_user
+  hostname         = var.lxc_ip
+  user             = var.lxc_user
   private_key_file = var.lxc_private_key_file
 
   depends_on = [ansible_playbook.install_k3s]

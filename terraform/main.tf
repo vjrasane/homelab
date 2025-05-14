@@ -1,11 +1,3 @@
-terraform {
-  required_providers {
-    proxmox = {
-      source = "telmate/proxmox"
-    }
-  }
-}
-
 locals {
   lxc_ips = [
     "192.168.1.80",
@@ -98,6 +90,7 @@ output "k3s_endpoint" {
     "https://127.0.0.1",
     "https://${var.k3s_vip}"
   )
+  sensitive = true
 }
 
 output "kube_config" {

@@ -3,7 +3,6 @@
 **/.env
 **/*.env
 **/*.pem
-**/*.tfstate
 **/*.tfstate.*
 **/*.tfstate.*.backup
 **/*.tfstate.backup
@@ -21,8 +20,6 @@ authelia/configuration.yml
 crontab.backup
 .terraform
 terraform/terraform.tfvars
-terraform/terraform.tfstate
-terraform/terraform.tfstate.backup
 terraform/lxc_ssh_key.pem
 terraform/terraform_vars.yml
 lxc_ssh_key.pem

@@ -35,3 +35,19 @@ sudo rm helmfile_0.159.0_linux_amd64.tar.gz
 sudo mv helmfile /usr/local/bin/
 helmfile init
 ```
+
+## Tofu
+
+```shell
+sudo snap install --classic opentofu
+```
+
+## Bitwarden CLLI
+
+```shell
+sudo snap install bw
+```
+
+```shell
+BITWARDENCLI_APPDATA_DIR=.bitwarden bw login
+```
