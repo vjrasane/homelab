@@ -7,12 +7,6 @@ reinstall:
 inventory:
 	cd ansible; ansible-inventory -i inventory.yml --graph
 
-tfapply:
-	cd terraform; terraform apply
-
-tfdestroy:
-	cd terraform; terraform destroy
-
 hide:
 	git secret hide -m -P
 
@@ -25,7 +19,7 @@ kube:
 CPU=$(shell dpkg --print-architecture)
 
 install-sops:
-	cd $(shell mktemp -d) 
+	cd $(shell mktemp -d)
 	curl -LO https://github.com/getsops/sops/releases/download/v3.10.2/sops-v3.10.2.linux.amd64
 	sudo mv sops-v3.10.2.linux.amd64 /usr/local/bin/sops
 	sudo chmod +x /usr/local/bin/sops
@@ -49,4 +43,4 @@ install-misc:
 	sudo apt-get install age
 
 install-deps: install-sops install-helm install-helmfile install-misc
-	@echo "Done"	
+	@echo "Done"
