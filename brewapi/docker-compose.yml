@@ -1,0 +1,10 @@
+services:
+  brewapi:
+    image: ghcr.io/vjrasane/brewapi
+    ports:
+      - 3003:3000
+    expose:
+      - 3000
+    env_file: .env
+    networks:
+      - homelab-public
