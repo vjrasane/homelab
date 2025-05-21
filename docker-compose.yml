@@ -9,3 +9,4 @@ include:
   - ./tandoor/docker-compose.yml
   - ./bind9/docker-compose.yml
   - ./brewapi/docker-compose.yml
+  - ./prometheus/docker-compose.yml

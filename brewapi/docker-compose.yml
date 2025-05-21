@@ -6,5 +6,9 @@ services:
     expose:
       - 3000
     env_file: .env
+    restart: unless-stopped
+    volumes:
+      - ../volumes/brewapi:/data
     networks:
       - homelab-public
+      - prometheus

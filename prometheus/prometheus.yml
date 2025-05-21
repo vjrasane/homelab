@@ -1,0 +1,8 @@
+global:
+  scrape_interval: 15s
+
+scrape_configs:
+  - job_name: 'brewapi'
+    scrape_interval: 30m
+    static_configs:
+      - targets: ['brewapi:3000']
